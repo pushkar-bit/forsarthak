@@ -219,10 +219,19 @@ export default function App() {
       ? Array.from(wrapRef.current.querySelectorAll<HTMLElement>(".bp-card"))
       : [];
 
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    let smoothY = window.scrollY;
+    const lerp = reduced ? 1 : touch ? 0.16 : 0.1;
     let raf = 0;
     const loop = () => {
       const vh = window.innerHeight;
-      const y = window.scrollY;
+      const realY = window.scrollY;
+      // eased inertia: visuals trail the raw scroll for a fluid, high-end feel
+      smoothY += (realY - smoothY) * lerp;
+      if (Math.abs(realY - smoothY) < 0.3) smoothY = realY;
+      const y = smoothY;
       const maxScroll = maxScrollRef.current;
 
       let panelOffset: number;
@@ -241,18 +250,30 @@ export default function App() {
       if (heroRef.current)
         heroRef.current.style.visibility = y > vh ? "hidden" : "visible";
 
+      const rotMax = reduced ? 0 : touch ? 11 : 5;
+      const parMax = reduced ? 0 : touch ? 54 : 26;
       for (const el of cards) {
+        const h = el.offsetHeight;
         const top = panelOffset + wrapTranslate + el.offsetTop;
-        const bottom = top + el.offsetHeight;
-        let scale: number;
+        const bottom = top + h;
         if (bottom <= 0 || top >= vh) {
-          scale = 0;
-        } else {
-          const enter = Math.min(1, (vh - top) / (vh * 0.6));
-          const exit = Math.min(1, bottom / (vh * 0.4));
-          scale = Math.max(0, Math.min(enter, exit));
+          el.style.transform = "scale(0)";
+          el.style.opacity = "0";
+          continue;
         }
-        el.style.transform = `scale(${scale})`;
+        const enter = Math.min(1, (vh - top) / (vh * 0.6));
+        const exit = Math.min(1, bottom / (vh * 0.4));
+        const presence = Math.max(0, Math.min(enter, exit));
+        // signed distance of the card centre from the viewport centre (~ -0.5..0.5)
+        const d = (top + h / 2 - vh / 2) / vh;
+        const dir = Number(el.dataset.dir || "1");
+        // swing harder at the edges, settle upright when centred
+        const rot = d * rotMax * dir * (1 - presence * 0.4);
+        const ty = -d * parMax;
+        el.style.opacity = String(Math.min(1, presence * 1.5));
+        el.style.transform = `translateY(${ty.toFixed(2)}px) scale(${presence.toFixed(
+          3
+        )}) rotate(${rot.toFixed(2)}deg)`;
       }
 
       const outroOffset = window.innerWidth < 640 ? 132 : 166;
@@ -267,9 +288,10 @@ export default function App() {
         outroBuyRef.current.style.transform = `scale(${p})`;
 
       // hand off to the normal-flow About section once the outro is fully white
+      // (uses the raw scroll so the fixed layer clears exactly as About arrives)
       const hideAt = vh + maxScroll + vh - 140;
       if (fxRef.current)
-        fxRef.current.style.visibility = y > hideAt ? "hidden" : "visible";
+        fxRef.current.style.visibility = realY > hideAt ? "hidden" : "visible";
 
       raf = requestAnimationFrame(loop);
     };
@@ -716,16 +738,18 @@ export default function App() {
                 );
               }
               const tile = TILES[tileIdx];
-              const origin =
-                colIndex < cols / 2 ? "right bottom" : "left bottom";
+              const leftHalf = colIndex < cols / 2;
+              const origin = leftHalf ? "right bottom" : "left bottom";
               return (
                 <div
                   key={i}
                   className="bp-card"
+                  data-dir={leftHalf ? -1 : 1}
                   style={{
                     aspectRatio: "2 / 3",
                     transform: "scale(0)",
                     transformOrigin: origin,
+                    opacity: 0,
                   }}
                 >
                   <TileView tile={tile} />
