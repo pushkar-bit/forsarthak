@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { motion } from "motion/react";
 
 /* ------------------------------------------------------------------ */
@@ -150,6 +150,7 @@ export default function App() {
   const outroBuyRef = useRef<HTMLAnchorElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const circleRef = useRef<HTMLSpanElement>(null);
+  const fxRef = useRef<HTMLDivElement>(null);
   const maxScrollRef = useRef(0);
 
   const [touch] = useState(
@@ -265,6 +266,11 @@ export default function App() {
       if (outroBuyRef.current)
         outroBuyRef.current.style.transform = `scale(${p})`;
 
+      // hand off to the normal-flow About section once the outro is fully white
+      const hideAt = vh + maxScroll + vh - 140;
+      if (fxRef.current)
+        fxRef.current.style.visibility = y > hideAt ? "hidden" : "visible";
+
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -280,6 +286,7 @@ export default function App() {
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
   return (
+    <>
     <div
       ref={rootRef}
       id="scroll-spacer"
@@ -291,6 +298,7 @@ export default function App() {
         cursor: touch ? "auto" : "none",
       }}
     >
+      <div ref={fxRef}>
       {/* ---------- CUSTOM CURSOR ---------- */}
       {!touch && (
         <div
@@ -447,11 +455,18 @@ export default function App() {
       >
         {!isMobile && (
           <span
+            onClick={() =>
+              document
+                .getElementById("about")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
             style={{
               fontWeight: 500,
               fontSize: 15,
               textTransform: "uppercase",
               color: "#fff",
+              pointerEvents: "auto",
+              cursor: "pointer",
             }}
           >
             About
@@ -720,7 +735,10 @@ export default function App() {
           </div>
         </div>
       </div>
+      </div>
     </div>
+    <AboutSection isMobile={isMobile} />
+    </>
   );
 }
 
@@ -871,6 +889,575 @@ function TileView({ tile }: { tile: Tile }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  ABOUT SECTION (normal flow, scrolls in after the outro)           */
+/* ------------------------------------------------------------------ */
+
+const FOCUS = [
+  { label: "Frontend — React & Next.js", pct: 92 },
+  { label: "TypeScript / JavaScript", pct: 90 },
+  { label: "AI — RAG, GenAI, LLM apps", pct: 86 },
+  { label: "Backend — Node.js & Express", pct: 84 },
+  { label: "UI / Design — Tailwind, Figma", pct: 82 },
+  { label: "Python & Data — NumPy, Pandas", pct: 78 },
+];
+
+const SKILL_GROUPS: { title: string; items: string[] }[] = [
+  {
+    title: "Languages",
+    items: ["TypeScript", "JavaScript", "Python", "C", "SQL", "DSA"],
+  },
+  {
+    title: "Frontend",
+    items: ["React", "Next.js", "React Native", "Tailwind CSS", "HTML", "CSS"],
+  },
+  {
+    title: "Backend & Data",
+    items: [
+      "Node.js",
+      "Express.js",
+      "MongoDB",
+      "MySQL",
+      "PostgreSQL",
+      "Prisma",
+      "Supabase",
+      "Firebase",
+      "BullMQ",
+      "Socket.io",
+    ],
+  },
+  {
+    title: "AI / GenAI",
+    items: [
+      "RAG systems",
+      "GenAI apps",
+      "Groq",
+      "OpenAI GPT-4o",
+      "Vector search",
+    ],
+  },
+  {
+    title: "Data Science",
+    items: ["NumPy", "Pandas", "Matplotlib", "Seaborn", "Tableau"],
+  },
+  {
+    title: "Tools & Infra",
+    items: [
+      "GitHub Actions",
+      "CI/CD",
+      "Cloudflare",
+      "Vercel",
+      "Git",
+      "Figma",
+      "Canva",
+    ],
+  },
+  {
+    title: "Product & People",
+    items: [
+      "Product management",
+      "Problem-solving",
+      "Decision-making",
+      "Public speaking",
+      "Strategy",
+    ],
+  },
+];
+
+const EXPERIENCE = [
+  {
+    role: "Software Developer",
+    org: "Launched Global · Remote",
+    date: "May – Jun 2025",
+    points: [
+      "Built a reusable restaurant-menu frontend template restaurants can customize and deploy without touching core code.",
+      "Focused on a clean, responsive, user-friendly interface with a modular structure built for scalability and reuse.",
+    ],
+    tech: "HTML · CSS · JavaScript",
+  },
+  {
+    role: "Growth & Development Head",
+    org: "Apollo Medskills · Rishihood University",
+    date: "Apr 2025",
+    points: [
+      "Owned consumer-engagement and conversion strategy for Apollo Medskills × Zarmed University.",
+      "Drove marketing, audience targeting and strategic brand communication.",
+    ],
+    tech: "Strategy · Growth · Brand",
+  },
+];
+
+const RECOGNITION = [
+  "Growth & Development Head — Arthakram Consulting Club",
+  "LSSC Declamation Champion",
+  "Interschool JAM Winner",
+  "MUN Debate Champion",
+  "Multiple hackathons & E-summits — lead, technical & brainstorming roles",
+];
+
+const WORK = [
+  {
+    name: "biol.club",
+    href: "https://www.biol.club",
+    note: "Cloudflare-secured campus platform. My finest build — every feature ideated and cross-questioned against its failure cases.",
+    tech: "Next.js · Cloudflare · Supabase · Edge",
+  },
+  {
+    name: "ichor",
+    href: "https://ichor-xi.vercel.app",
+    note: "Run-to-conquer territory game. Claim ground on every run, defend it, climb the leaderboards. In progress.",
+    tech: "Geo-territory · Realtime · Clans",
+  },
+  {
+    name: "InsightRAG",
+    href: "https://rag-lac-ten.vercel.app",
+    note: "Multi-tenant RAG: document upload, vector search, context-aware answers mapped back to source.",
+    tech: "Next.js · Groq · BullMQ · MongoDB · Zustand",
+  },
+  {
+    name: "HomeQuest",
+    href: "https://homequest1.vercel.app",
+    note: "Full-stack AI real-estate marketplace — listings, live chat, AI-assisted property queries.",
+    tech: "React · Node · MySQL · Prisma · Socket.io · GPT-4o",
+  },
+  {
+    name: "Zombie Survival Shooter",
+    href: "https://zombie-survival-shooter.vercel.app",
+    note: "Wave-based browser game on a custom engine built with OOP & SOLID principles.",
+    tech: "Next.js · React · TypeScript · HTML5 Canvas",
+  },
+];
+
+const CONTACT = [
+  { label: "Email", value: "pushkarjain2024@nst.rishihood.edu.in", href: "mailto:pushkarjain2024@nst.rishihood.edu.in" },
+  { label: "Phone", value: "+91 79868 05107", href: "tel:+917986805107" },
+  { label: "GitHub", value: "github.com/pushkar-bit", href: "https://github.com/pushkar-bit" },
+  { label: "LinkedIn", value: "linkedin.com/in/pushkarjainn", href: "https://www.linkedin.com/in/pushkarjainn" },
+  { label: "Based in", value: "Delhi, India", href: undefined },
+];
+
+function AboutSection({ isMobile }: { isMobile: boolean }) {
+  const secRef = useRef<HTMLElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = secRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => entries[0]?.isIntersecting && setInView(true),
+      { threshold: 0.12 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const pad = isMobile ? "20px" : "clamp(40px, 8vw, 120px)";
+  const label: CSSProperties = {
+    fontSize: 11,
+    fontWeight: 600,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    color: "#8a8a8a",
+    marginBottom: 18,
+  };
+  const hr: CSSProperties = {
+    border: "none",
+    borderTop: "1px solid rgba(0,0,0,0.1)",
+    margin: isMobile ? "48px 0" : "72px 0",
+  };
+
+  return (
+    <section
+      id="about"
+      ref={secRef}
+      style={{
+        position: "relative",
+        zIndex: 30,
+        background: "#fff",
+        color: "#0a0a0a",
+        padding: `${isMobile ? "72px" : "120px"} ${pad} ${
+          isMobile ? "72px" : "110px"
+        }`,
+      }}
+    >
+      <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+        {/* INTRO */}
+        <div style={label}>About — Pushkar Jain</div>
+        <h2
+          style={{
+            fontSize: isMobile ? 34 : "clamp(44px, 6vw, 82px)",
+            fontWeight: 600,
+            letterSpacing: "-0.04em",
+            lineHeight: 1.02,
+            maxWidth: 900,
+            marginBottom: 28,
+          }}
+        >
+          Full-Stack & AI developer. The stack is broad — the commitment is
+          unlimited.
+        </h2>
+        <p
+          style={{
+            fontSize: isMobile ? 16 : 19,
+            lineHeight: 1.6,
+            color: "#3a3a3a",
+            maxWidth: 720,
+          }}
+        >
+          I build scalable, user-centric products end to end — from a hardened,
+          well-reasoned backend to interfaces that feel effortless — and I lean
+          on AI and automation to make them smarter. I care about product, not
+          just code: every feature gets ideated, cross-questioned against its
+          failure cases, and shipped to stay up. Sarthak, this is what I'd bring
+          to the coffee business — and I'm up for every sleepless night it takes.
+        </p>
+
+        <hr style={hr} />
+
+        {/* FOCUS BARS */}
+        <div style={label}>Focus stack</div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: isMobile ? "22px 0" : "26px 60px",
+            maxWidth: 900,
+          }}
+        >
+          {FOCUS.map((f) => (
+            <div key={f.label}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  marginBottom: 9,
+                }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 500 }}>{f.label}</span>
+                <span style={{ fontSize: 12, color: "#9a9a9a" }}>{f.pct}%</span>
+              </div>
+              <div
+                style={{
+                  height: 4,
+                  background: "rgba(0,0,0,0.08)",
+                  borderRadius: 100,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: inView ? `${f.pct}%` : "0%",
+                    background: "#0a0a0a",
+                    borderRadius: 100,
+                    transition: "width 1.1s cubic-bezier(0.22,1,0.36,1)",
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <hr style={hr} />
+
+        {/* SKILLS GRID */}
+        <div style={label}>Everything in the toolbox</div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : "repeat(auto-fit, minmax(230px, 1fr))",
+            gap: isMobile ? 28 : 36,
+          }}
+        >
+          {SKILL_GROUPS.map((g) => (
+            <div key={g.title}>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  marginBottom: 14,
+                  color: "#0a0a0a",
+                }}
+              >
+                {g.title}
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {g.items.map((it) => (
+                  <span
+                    key={it}
+                    style={{
+                      fontSize: 13,
+                      color: "#333",
+                      background: "rgba(0,0,0,0.05)",
+                      border: "1px solid rgba(0,0,0,0.08)",
+                      borderRadius: 100,
+                      padding: "6px 12px",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {it}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <hr style={hr} />
+
+        {/* EXPERIENCE */}
+        <div style={label}>Experience</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+          {EXPERIENCE.map((e) => (
+            <div
+              key={e.role}
+              style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "200px 1fr",
+                gap: isMobile ? 10 : 40,
+              }}
+            >
+              <div style={{ fontSize: 13, color: "#9a9a9a", paddingTop: 4 }}>
+                {e.date}
+              </div>
+              <div>
+                <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 600 }}>
+                  {e.role}
+                </div>
+                <div
+                  style={{ fontSize: 14, color: "#6a6a6a", margin: "3px 0 14px" }}
+                >
+                  {e.org}
+                </div>
+                <ul
+                  style={{
+                    listStyle: "none",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
+                >
+                  {e.points.map((p, i) => (
+                    <li
+                      key={i}
+                      style={{
+                        fontSize: 15,
+                        lineHeight: 1.55,
+                        color: "#3a3a3a",
+                        paddingLeft: 18,
+                        position: "relative",
+                      }}
+                    >
+                      <span style={{ position: "absolute", left: 0 }}>—</span>
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                <div
+                  style={{
+                    fontSize: 12,
+                    letterSpacing: "0.04em",
+                    color: "#9a9a9a",
+                    marginTop: 12,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {e.tech}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <hr style={hr} />
+
+        {/* LEADERSHIP + EDUCATION */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: isMobile ? 48 : 60,
+          }}
+        >
+          <div>
+            <div style={label}>Leadership & recognition</div>
+            <ul
+              style={{
+                listStyle: "none",
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+              }}
+            >
+              {RECOGNITION.map((r) => (
+                <li
+                  key={r}
+                  style={{
+                    fontSize: 15,
+                    lineHeight: 1.5,
+                    color: "#2a2a2a",
+                    paddingLeft: 18,
+                    position: "relative",
+                  }}
+                >
+                  <span style={{ position: "absolute", left: 0 }}>◆</span>
+                  {r}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <div style={label}>Education</div>
+            <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 600 }}>
+              B.Tech, Computer Science
+            </div>
+            <div style={{ fontSize: 15, color: "#6a6a6a", margin: "4px 0 10px" }}>
+              Newton School of Technology
+            </div>
+            <div style={{ fontSize: 14, color: "#3a3a3a" }}>
+              GPA 7.0 / 10 · Expected 2028
+            </div>
+          </div>
+        </div>
+
+        <hr style={hr} />
+
+        {/* SELECTED WORK */}
+        <div style={label}>Selected work</div>
+        <div style={{ borderTop: "1px solid rgba(0,0,0,0.1)" }}>
+          {WORK.map((w) => (
+            <a
+              key={w.name}
+              href={w.href}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "220px 1fr auto",
+                gap: isMobile ? 6 : 30,
+                alignItems: "start",
+                padding: isMobile ? "22px 0" : "26px 0",
+                borderBottom: "1px solid rgba(0,0,0,0.1)",
+                textDecoration: "none",
+                color: "#0a0a0a",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: isMobile ? 22 : 26,
+                  fontWeight: 600,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {w.name}
+              </div>
+              <div
+                style={{ fontSize: 14, lineHeight: 1.5, color: "#4a4a4a" }}
+              >
+                {w.note}
+                <div
+                  style={{
+                    fontSize: 11,
+                    letterSpacing: "0.04em",
+                    color: "#9a9a9a",
+                    marginTop: 8,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {w.tech}
+                </div>
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "#9a9a9a",
+                  whiteSpace: "nowrap",
+                  paddingTop: 4,
+                }}
+              >
+                Visit ↗
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <hr style={hr} />
+
+        {/* CONTACT */}
+        <div style={label}>Get in touch</div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: isMobile ? 20 : 28,
+          }}
+        >
+          {CONTACT.map((c) => (
+            <div key={c.label}>
+              <div style={{ fontSize: 12, color: "#9a9a9a", marginBottom: 6 }}>
+                {c.label}
+              </div>
+              {c.href ? (
+                <a
+                  href={c.href}
+                  target={c.href.startsWith("http") ? "_blank" : undefined}
+                  rel="noreferrer"
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 500,
+                    color: "#0a0a0a",
+                    textDecoration: "none",
+                    borderBottom: "1px solid rgba(0,0,0,0.25)",
+                    paddingBottom: 2,
+                  }}
+                >
+                  {c.value}
+                </a>
+              ) : (
+                <span style={{ fontSize: 15, fontWeight: 500 }}>{c.value}</span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div
+          style={{
+            marginTop: isMobile ? 60 : 100,
+            paddingTop: 28,
+            borderTop: "1px solid rgba(0,0,0,0.1)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 14,
+          }}
+        >
+          <span style={{ fontSize: 13, color: "#9a9a9a" }}>
+            Pushkar Jain · Built for Sarthak · 2026
+          </span>
+          <span
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: "pointer",
+              borderBottom: "1px solid rgba(0,0,0,0.25)",
+              paddingBottom: 2,
+            }}
+          >
+            Back to top ↑
+          </span>
+        </div>
+      </div>
+    </section>
   );
 }
 
