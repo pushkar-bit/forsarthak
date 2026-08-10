@@ -100,11 +100,11 @@ const TILES: Tile[] = [
   },
   {
     kind: "card",
-    tag: "THE OFFER",
-    title: "Unlimited consistency",
+    tag: "WHAT I BRING",
+    title: "More than a stack",
     caption:
-      "My worth isn't the tech stack — it's the will to prove myself every single day. I'm up for every sleepless night the coffee product needs, because I want to be part of it.",
-    tech: "COMMITMENT · OWNERSHIP · PROOF DAILY",
+      "Consistency is just one of them. Commitment I actually owe, ownership of the product, relentless follow-through when things swing up and down, creativity, and the will to prove myself every single day — up for every sleepless night it takes.",
+    tech: "COMMITMENT · OWNERSHIP · GRIT · CONSISTENCY",
     accent: "linear-gradient(135deg,#1a1a1a 0%,#5c4a1f 100%)",
   },
 ];
@@ -896,6 +896,45 @@ function TileView({ tile }: { tile: Tile }) {
 /*  ABOUT SECTION (normal flow, scrolls in after the outro)           */
 /* ------------------------------------------------------------------ */
 
+const QUALITIES: { title: string; desc: string }[] = [
+  {
+    title: "Commitment I actually owe",
+    desc: "I treat a commitment like a debt. If I said it, it ships — no matter how, no matter the hour.",
+  },
+  {
+    title: "Unlimited consistency",
+    desc: "Not a burst of effort. Showing up and moving the product forward every single day.",
+  },
+  {
+    title: "Relentless follow-through",
+    desc: "Things go up and down; I don't. I don't quit on a thing halfway — I finish what I start.",
+  },
+  {
+    title: "Ownership",
+    desc: "I want to be connected to the product and the business, not just close tickets and log off.",
+  },
+  {
+    title: "The will to prove myself",
+    desc: "This is the opportunity I want to earn, so I'll prove I'm worth it — daily, not once.",
+  },
+  {
+    title: "Endurance",
+    desc: "Up for every sleepless night the product needs. I mean it — this site was built at 02:39.",
+  },
+  {
+    title: "Creativity",
+    desc: "biol.club and ichor exist because I chase ideas most people wouldn't attempt, and finish them.",
+  },
+  {
+    title: "Fails-last engineering",
+    desc: "Every feature ideated and cross-questioned against its failure cases and consequences before it ships.",
+  },
+  {
+    title: "Adaptability & fast learning",
+    desc: "My stack keeps growing because I learn whatever the product needs, fast.",
+  },
+];
+
 const FOCUS = [
   { label: "Frontend — React & Next.js", pct: 92 },
   { label: "TypeScript / JavaScript", pct: 90 },
@@ -1114,6 +1153,53 @@ function AboutSection({ isMobile }: { isMobile: boolean }) {
           failure cases, and shipped to stay up. Sarthak, this is what I'd bring
           to the coffee business — and I'm up for every sleepless night it takes.
         </p>
+
+        <hr style={hr} />
+
+        {/* QUALITIES */}
+        <div style={label}>What I bring — beyond the code</div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: isMobile ? 26 : "40px 56px",
+          }}
+        >
+          {QUALITIES.map((q, i) => (
+            <div key={q.title} style={{ display: "flex", gap: 16 }}>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#c0c0c0",
+                  lineHeight: 1.4,
+                  minWidth: 22,
+                }}
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <div
+                  style={{
+                    fontSize: isMobile ? 17 : 19,
+                    fontWeight: 600,
+                    letterSpacing: "-0.02em",
+                    marginBottom: 6,
+                  }}
+                >
+                  {q.title}
+                </div>
+                <div
+                  style={{ fontSize: 14.5, lineHeight: 1.55, color: "#4a4a4a" }}
+                >
+                  {q.desc}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
 
         <hr style={hr} />
 
