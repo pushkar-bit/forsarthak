@@ -430,8 +430,8 @@ export default function App() {
     const distance = targetY - startY;
     if (distance <= 0) return;
 
-    // Cinematic comfortable pace: not too quick, not too slow (~5.2s)
-    const duration = 5200;
+    // Cinematic comfortable pace: not too quick, not too slow (~6.0s)
+    const duration = 6000;
     let startTime: number | null = null;
     let cancelled = false;
 
@@ -440,14 +440,21 @@ export default function App() {
 
     const cancel = () => {
       cancelled = true;
+      cleanup();
+    };
+
+    const cleanup = () => {
       window.removeEventListener("wheel", cancel);
       window.removeEventListener("touchstart", cancel);
       window.removeEventListener("keydown", cancel);
     };
 
-    window.addEventListener("wheel", cancel, { passive: true });
-    window.addEventListener("touchstart", cancel, { passive: true });
-    window.addEventListener("keydown", cancel, { passive: true });
+    // 400ms grace period before interrupt listeners activate
+    const cancelTimeout = window.setTimeout(() => {
+      window.addEventListener("wheel", cancel, { passive: true });
+      window.addEventListener("touchstart", cancel, { passive: true });
+      window.addEventListener("keydown", cancel, { passive: true });
+    }, 400);
 
     const step = (currentTime: number) => {
       if (cancelled) return;
@@ -461,7 +468,8 @@ export default function App() {
       if (progress < 1) {
         requestAnimationFrame(step);
       } else {
-        cancel();
+        window.clearTimeout(cancelTimeout);
+        cleanup();
       }
     };
 
@@ -1433,62 +1441,74 @@ export default function App() {
         </div>
 
         {/* 1L. Hero Floating Drivethru Scroll Down Button */}
-        <motion.button
-          onClick={driveThru}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: EASE, delay: 0.5 }}
+        <div
           style={{
             position: "fixed",
-            left: "50%",
-            bottom: isMobile ? 24 : 36,
-            transform: "translateX(-50%)",
-            zIndex: 35,
-            cursor: "pointer",
+            left: 0,
+            right: 0,
+            bottom: isMobile ? 20 : 32,
+            zIndex: 40,
             display: "flex",
-            alignItems: "center",
-            gap: 10,
-            padding: isMobile ? "10px 20px" : "12px 28px",
-            borderRadius: 9999,
-            background: "rgba(12, 12, 12, 0.82)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(255, 255, 255, 0.25)",
-            boxShadow: "0 10px 32px rgba(0, 0, 0, 0.5)",
-            color: "#FFFFFF",
-            fontFamily: "'Inter Tight', sans-serif",
-            fontSize: isMobile ? 12 : 13,
-            fontWeight: 600,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            transition: "all 0.2s ease",
+            justifyContent: "center",
+            pointerEvents: "none",
           }}
         >
-          <span
+          <motion.button
+            onClick={driveThru}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE, delay: 0.4 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.96 }}
             style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              backgroundColor: "#38bdf8",
-              boxShadow: "0 0 10px #38bdf8",
-              display: "inline-block",
+              pointerEvents: "auto",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: isMobile ? "10px 22px" : "12px 30px",
+              borderRadius: 9999,
+              background: "rgba(10, 10, 10, 0.9)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              border: "1.5px solid rgba(56, 189, 248, 0.5)",
+              boxShadow:
+                "0 12px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(56, 189, 248, 0.25)",
+              color: "#FFFFFF",
+              fontFamily: "'Inter Tight', sans-serif",
+              fontSize: isMobile ? 12 : 14,
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              transition: "all 0.2s ease",
             }}
-          />
-          <span>drivethru</span>
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#FFFFFF"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
           >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <polyline points="19 12 12 19 5 12" />
-          </svg>
-        </motion.button>
+            <span
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                backgroundColor: "#38bdf8",
+                boxShadow: "0 0 10px #38bdf8",
+                display: "inline-block",
+              }}
+            />
+            <span>drivethru</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#38bdf8"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <polyline points="19 12 12 19 5 12" />
+            </svg>
+          </motion.button>
+        </div>
       </div>
 
       {/* ------------------------------------------------------------ */}
