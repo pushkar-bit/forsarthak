@@ -140,7 +140,7 @@ const PROJECTS: Project[] = [
     role: "Architect & PRD Lead",
     tagline:
       "A student social platform for discovery, anonymous chat, campus stories, and RAG-powered document processing.",
-    scale: "29,000+ requests · 4,000 users",
+    scale: "29,000+ requests · biol.club",
     href: "https://www.biol.club",
     github: "https://github.com/pushkar-bit",
     tech: [
@@ -159,7 +159,7 @@ const PROJECTS: Project[] = [
     ],
     bullets: [
       "Architect and PRD lead: defined spec, feature set, and success metrics before development, then co-built and shipped with one engineer.",
-      "Reached 100 users on launch day and roughly 4,000 total users (29K+ requests) with zero paid acquisition, running entirely on free-tier infrastructure.",
+      "Reached 100 users on launch day and 29,000+ requests with zero paid acquisition, running entirely on free-tier infrastructure.",
       "Grounded product decisions in primary research on Gen Z consumer behavior regarding how campus-age users discover, engage with, and churn from social products.",
       "Designed in-app points economy (signup and survey rewards) and peer contact-exchange flow, specifying idempotent transactions and atomic accept logic so concurrent requests could not double-spend points or leak contact details before acceptance.",
       "Owned application security end-to-end: enforced HTTPS/TLS, closed clickjacking vectors with frame-ancestor restrictions, and layered edge rate limiting and DDoS mitigation; held through campus traffic spikes without security incidents.",
@@ -1124,7 +1124,7 @@ export default function App() {
                 marginTop: 4,
               }}
             >
-              requests on biol · 4K users
+              requests on biol
             </div>
           </motion.div>
 
@@ -1611,7 +1611,6 @@ export default function App() {
             >
               {[
                 { label: "29,000+", desc: "Requests on biol" },
-                { label: "4,000", desc: "Users on Zero Ad Spend" },
                 { label: "500+", desc: "ICHOR Run Club Members" },
                 { label: "100%", desc: "RU-Rox Bibs Sold Out" },
               ].map((stat) => (
