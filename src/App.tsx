@@ -528,8 +528,9 @@ export default function App() {
       if (!wrap) return;
       const maxScroll = Math.max(0, wrap.scrollHeight - vh);
       maxScrollRef.current = maxScroll;
+      const outroDuration = Math.round(vh * 0.7);
       if (rootRef.current) {
-        rootRef.current.style.height = `${vh + maxScroll + 2 * vh}px`;
+        rootRef.current.style.height = `${vh + maxScroll + outroDuration}px`;
       }
     };
 
@@ -586,8 +587,10 @@ export default function App() {
       const isMobileScreen = window.innerWidth < 640;
       const outroOffset = isMobileScreen ? 132 : 166;
       const outroStart = vh + maxScroll;
-      const denom = Math.max(1, vh - 100);
-      const p = Math.max(0, Math.min(1, (y - outroStart) / denom));
+      const outroDuration = Math.round(vh * 0.7);
+      const rawP = Math.max(0, Math.min(1, (y - outroStart) / outroDuration));
+      // Optical smoothstep for a perfectly blended black-to-white dissolve
+      const p = rawP * rawP * (3 - 2 * rawP);
 
       if (overlayRef.current) {
         overlayRef.current.style.opacity = String(p);
@@ -602,10 +605,18 @@ export default function App() {
         outroBuyRef.current.style.transform = `scale(${p})`;
       }
 
-      // Seamlessly hide fixed effect layer when scrolling into the resume dossier
-      const hideAt = vh + maxScroll + vh - 80;
+      // Smooth handoff: as scroll passes the outro, fxRef smoothly translates up
+      // so there is NEVER an empty white gap or sudden visibility snap!
+      const totalOutroEnd = outroStart + outroDuration;
       if (fxRef.current) {
-        fxRef.current.style.visibility = y > hideAt ? "hidden" : "visible";
+        if (y > totalOutroEnd) {
+          const overScroll = y - totalOutroEnd;
+          fxRef.current.style.transform = `translateY(${-overScroll}px)`;
+          fxRef.current.style.visibility = overScroll > vh ? "hidden" : "visible";
+        } else {
+          fxRef.current.style.transform = "translateY(0px)";
+          fxRef.current.style.visibility = "visible";
+        }
       }
 
       raf = requestAnimationFrame(loop);
