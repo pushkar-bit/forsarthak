@@ -4,10 +4,8 @@ import { motion } from "motion/react";
 const EASE: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 const SYMBOLS = ["PJ", "AI", ">>", "{}", "//"];
 
-const LEFT_VIDEO_URL =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_39ca84eAE1ODL9hbR5VhoEj8tBf/hf_20260625_154433_532a85d3-dabf-4265-b8bd-19ac6af31842.mp4";
-const RIGHT_VIDEO_URL =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_39ca84eAE1ODL9hbR5VhoEj8tBf/hf_20260625_154401_a664f076-b971-4557-8728-40ef9ea4c49b.mp4";
+// Hero background image
+const HERO_IMAGE_URL = "/img/imagetobeused.jpg";
 
 // Gallery: only real project screenshots + Pushkar's official image
 const GALLERY_IMAGES = [
@@ -342,11 +340,7 @@ export default function App() {
   const outroBuyRef = useRef<HTMLAnchorElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const circleRef = useRef<HTMLSpanElement>(null);
-  const leftVideoRef = useRef<HTMLVideoElement>(null);
-  const rightVideoRef = useRef<HTMLVideoElement>(null);
-
   const maxScrollRef = useRef(0);
-  const activeSideRef = useRef<"left" | "right">("right");
 
   const [touch, setTouch] = useState(
     () =>
@@ -358,7 +352,7 @@ export default function App() {
     typeof window !== "undefined" ? colsForWidth(window.innerWidth) : 4
   );
 
-  const [videosReady, setVideosReady] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const layout = useMemo(() => buildLayout(GALLERY_IMAGES.length, cols), [cols]);
 
@@ -393,129 +387,16 @@ export default function App() {
     return () => window.removeEventListener("mousemove", move);
   }, [touch]);
 
-  /* Video loading and playback */
+  /* Mouse parallax interaction for hero background */
   useEffect(() => {
-    const left = leftVideoRef.current;
-    const right = rightVideoRef.current;
-    if (!left || !right) return;
-
-    let leftLoaded = false;
-    let rightLoaded = false;
-
-    const checkReady = () => {
-      if (leftLoaded && rightLoaded) {
-        setVideosReady(true);
-      }
-    };
-
-    const onLeftLoad = () => {
-      leftLoaded = true;
-      checkReady();
-    };
-
-    const onRightLoad = () => {
-      rightLoaded = true;
-      checkReady();
-    };
-
-    left.addEventListener("loadeddata", onLeftLoad);
-    right.addEventListener("loadeddata", onRightLoad);
-
-    if (left.readyState >= 2) leftLoaded = true;
-    if (right.readyState >= 2) rightLoaded = true;
-    checkReady();
-
-    /* Touch autoplay alternate loop */
-    if (touch) {
-      left.style.display = "block";
-      right.style.display = "none";
-      left.play().catch(() => {});
-
-      const onLeftEnded = () => {
-        left.style.display = "none";
-        right.style.display = "block";
-        right.currentTime = 0;
-        right.play().catch(() => {});
-      };
-
-      const onRightEnded = () => {
-        right.style.display = "none";
-        left.style.display = "block";
-        left.currentTime = 0;
-        left.play().catch(() => {});
-      };
-
-      left.addEventListener("ended", onLeftEnded);
-      right.addEventListener("ended", onRightEnded);
-
-      return () => {
-        left.removeEventListener("loadeddata", onLeftLoad);
-        right.removeEventListener("loadeddata", onRightLoad);
-        left.removeEventListener("ended", onLeftEnded);
-        right.removeEventListener("ended", onRightEnded);
-      };
-    }
-
-    /* Desktop cursor-scrub interaction */
-    let rafId = 0;
-    let targetLeftTime = 0;
-    let targetRightTime = 0;
-
+    if (touch) return;
     const handleMouseMove = (e: MouseEvent) => {
-      const w = window.innerWidth;
-      const center = w / 2;
-      const deadZone = Math.max(30, w * 0.05);
-
-      if (e.clientX >= center - deadZone && e.clientX <= center + deadZone) {
-        targetLeftTime = 0;
-        targetRightTime = 0;
-      } else if (e.clientX < center - deadZone) {
-        activeSideRef.current = "right";
-        const range = center - deadZone;
-        const dist = center - deadZone - e.clientX;
-        const progress = Math.max(0, Math.min(1, dist / range));
-        if (right.duration) {
-          targetRightTime = progress * right.duration;
-        }
-      } else {
-        activeSideRef.current = "left";
-        const range = w - (center + deadZone);
-        const dist = e.clientX - (center + deadZone);
-        const progress = Math.max(0, Math.min(1, dist / range));
-        if (left.duration) {
-          targetLeftTime = progress * left.duration;
-        }
-      }
+      const x = (e.clientX / window.innerWidth - 0.5) * 26;
+      const y = (e.clientY / window.innerHeight - 0.5) * 26;
+      setMousePos({ x, y });
     };
-
-    const scrubLoop = () => {
-      if (activeSideRef.current === "right") {
-        if (right.style.display !== "block") right.style.display = "block";
-        if (left.style.display !== "none") left.style.display = "none";
-
-        if (!right.seeking && right.duration && Math.abs(right.currentTime - targetRightTime) > 0.03) {
-          right.currentTime = targetRightTime;
-        }
-      } else {
-        if (left.style.display !== "block") left.style.display = "block";
-        if (right.style.display !== "none") right.style.display = "none";
-
-        if (!left.seeking && left.duration && Math.abs(left.currentTime - targetLeftTime) > 0.03) {
-          left.currentTime = targetLeftTime;
-        }
-      }
-      rafId = requestAnimationFrame(scrubLoop);
-    };
-
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    rafId = requestAnimationFrame(scrubLoop);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      cancelAnimationFrame(rafId);
-      left.removeEventListener("loadeddata", onLeftLoad);
-      right.removeEventListener("loadeddata", onRightLoad);
-    };
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [touch]);
 
   /* Circle symbol randomizer on scroll throttled to 80ms */
@@ -699,7 +580,7 @@ export default function App() {
             </div>
           )}
 
-          {/* 1B. Video Container */}
+          {/* 1B. Hero Background Visual featuring Pushkar's JPG (imagetobeused.jpg) */}
           <div
             ref={heroRef}
             id="main-canvas"
@@ -711,39 +592,41 @@ export default function App() {
               zIndex: 0,
               overflow: "hidden",
               pointerEvents: "none",
-              background: "#000000",
-              opacity: videosReady ? 1 : 0,
-              transition: "opacity 0.3s ease",
+              background: "#080808",
             }}
           >
-            <video
-              ref={leftVideoRef}
-              src={LEFT_VIDEO_URL}
-              muted
-              playsInline
-              preload="auto"
+            <img
+              src={HERO_IMAGE_URL}
+              alt="Pushkar Jain"
               style={{
                 position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
+                inset: "-4%",
+                width: "108%",
+                height: "108%",
                 objectFit: "cover",
-                display: "none",
+                objectPosition: "center 20%",
+                filter: "brightness(0.65) contrast(1.1) saturate(1.05)",
+                transform: touch
+                  ? "none"
+                  : `translate3d(${-mousePos.x}px, ${-mousePos.y}px, 0) scale(1.02)`,
+                transition: "transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)",
               }}
             />
-            <video
-              ref={rightVideoRef}
-              src={RIGHT_VIDEO_URL}
-              muted
-              playsInline
-              preload="auto"
+            {/* Cinematic dark gradients for legibility of text and smooth contrast */}
+            <div
               style={{
                 position: "absolute",
                 inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
+                background:
+                  "linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.8) 100%)",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "radial-gradient(ellipse at center, transparent 32%, rgba(0,0,0,0.7) 100%)",
               }}
             />
           </div>
