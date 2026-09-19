@@ -398,6 +398,7 @@ export default function App() {
   const footerRef = useRef<HTMLDivElement>(null);
   const outroInfoRef = useRef<HTMLDivElement>(null);
   const outroBuyRef = useRef<HTMLAnchorElement>(null);
+  const heroDrivethruRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const circleRef = useRef<HTMLSpanElement>(null);
   const maxScrollRef = useRef(0);
@@ -536,9 +537,8 @@ export default function App() {
       if (!wrap) return;
       const maxScroll = Math.max(0, wrap.scrollHeight - vh);
       maxScrollRef.current = maxScroll;
-      const outroDuration = Math.round(vh * 0.7);
       if (rootRef.current) {
-        rootRef.current.style.height = `${vh + maxScroll + outroDuration}px`;
+        rootRef.current.style.height = `${vh + maxScroll + vh}px`;
       }
     };
 
@@ -551,10 +551,21 @@ export default function App() {
       ? Array.from(wrapRef.current.querySelectorAll<HTMLElement>(".bp-card"))
       : [];
 
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    let smoothY = window.scrollY;
+    const lerp = reduced ? 1 : touch ? 0.16 : 0.1;
     let raf = 0;
+
     const loop = () => {
       const vh = window.innerHeight;
-      const y = window.scrollY;
+      const realY = window.scrollY;
+
+      // Eased inertia: visuals trail the raw scroll for a fluid, high-end feel
+      smoothY += (realY - smoothY) * lerp;
+      if (Math.abs(realY - smoothY) < 0.3) smoothY = realY;
+      const y = smoothY;
       const maxScroll = maxScrollRef.current;
 
       let panelOffset: number;
@@ -578,24 +589,42 @@ export default function App() {
         heroRef.current.style.visibility = y > vh ? "hidden" : "visible";
       }
 
+      // Hero floating drivethru button: smoothly fades out as user scrolls past hero
+      if (heroDrivethruRef.current) {
+        const heroP = Math.max(0, 1 - y / (vh * 0.35));
+        heroDrivethruRef.current.style.opacity = String(heroP);
+        heroDrivethruRef.current.style.pointerEvents = heroP <= 0.05 ? "none" : "auto";
+      }
+
+      // Dynamic 3D tilt, parallax and scaling for scattered cards
+      const rotMax = reduced ? 0 : touch ? 10 : 5;
+      const parMax = reduced ? 0 : touch ? 48 : 24;
       for (const el of cards) {
+        const h = el.offsetHeight;
         const top = panelOffset + wrapTranslate + el.offsetTop;
-        const bottom = top + el.offsetHeight;
-        let scale: number;
+        const bottom = top + h;
         if (bottom <= 0 || top >= vh) {
-          scale = 0;
-        } else {
-          const enter = Math.min(1, (vh - top) / (vh * 0.6));
-          const exit = Math.min(1, bottom / (vh * 0.4));
-          scale = Math.max(0, Math.min(enter, exit));
+          el.style.transform = "scale(0)";
+          el.style.opacity = "0";
+          continue;
         }
-        el.style.transform = `scale(${scale})`;
+        const enter = Math.min(1, (vh - top) / (vh * 0.6));
+        const exit = Math.min(1, bottom / (vh * 0.4));
+        const presence = Math.max(0, Math.min(enter, exit));
+        const d = (top + h / 2 - vh / 2) / vh;
+        const dir = Number(el.dataset.dir || "1");
+        const rot = d * rotMax * dir * (1 - presence * 0.4);
+        const ty = -d * parMax;
+        el.style.opacity = String(Math.min(1, presence * 1.5));
+        el.style.transform = `translateY(${ty.toFixed(2)}px) scale(${presence.toFixed(
+          3
+        )}) rotate(${rot.toFixed(2)}deg)`;
       }
 
       const isMobileScreen = window.innerWidth < 640;
       const outroOffset = isMobileScreen ? 132 : 166;
       const outroStart = vh + maxScroll;
-      const outroDuration = Math.round(vh * 0.7);
+      const outroDuration = vh;
       const rawP = Math.max(0, Math.min(1, (y - outroStart) / outroDuration));
       // Optical smoothstep for a perfectly blended black-to-white dissolve
       const p = rawP * rawP * (3 - 2 * rawP);
@@ -613,18 +642,10 @@ export default function App() {
         outroBuyRef.current.style.transform = `scale(${p})`;
       }
 
-      // Smooth handoff: as scroll passes the outro, fxRef smoothly translates up
-      // so there is NEVER an empty white gap or sudden visibility snap!
-      const totalOutroEnd = outroStart + outroDuration;
+      // Hand off cleanly to normal-flow resume dossier once outro dissolve is complete
+      const hideAt = outroStart + outroDuration;
       if (fxRef.current) {
-        if (y > totalOutroEnd) {
-          const overScroll = y - totalOutroEnd;
-          fxRef.current.style.transform = `translateY(${-overScroll}px)`;
-          fxRef.current.style.visibility = overScroll > vh ? "hidden" : "visible";
-        } else {
-          fxRef.current.style.transform = "translateY(0px)";
-          fxRef.current.style.visibility = "visible";
-        }
+        fxRef.current.style.visibility = realY >= hideAt ? "hidden" : "visible";
       }
 
       raf = requestAnimationFrame(loop);
@@ -638,7 +659,7 @@ export default function App() {
       window.removeEventListener("resize", setSizes);
       window.removeEventListener("load", setSizes);
     };
-  }, [cols]);
+  }, [cols, touch]);
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
   const isTablet =
@@ -1263,6 +1284,7 @@ export default function App() {
                     <div
                       key={i}
                       className="bp-card group"
+                      data-dir={colIndex < cols / 2 ? -1 : 1}
                       onClick={() => {
                         if (meta.url) {
                           window.open(meta.url, "_blank");
@@ -1440,8 +1462,9 @@ export default function App() {
           </div>
         </div>
 
-        {/* 1L. Hero Floating Drivethru Scroll Down Button */}
+        {/* 1L. Hero Floating Drivethru Scroll Down Button (fades as user scrolls past hero) */}
         <div
+          ref={heroDrivethruRef}
           style={{
             position: "fixed",
             left: 0,
@@ -1450,7 +1473,8 @@ export default function App() {
             zIndex: 40,
             display: "flex",
             justifyContent: "center",
-            pointerEvents: "none",
+            pointerEvents: "auto",
+            transition: "opacity 0.2s ease",
           }}
         >
           <motion.button
