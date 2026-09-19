@@ -21,18 +21,73 @@ const GALLERY_IMAGES = [
   "/img/shot-rag.png",
 ];
 
-// Captions for each gallery tile
-const GALLERY_CAPTIONS: Record<number, string> = {
-  0: "Pushkar Jain",
-  1: "biol.club — 29K+ requests",
-  2: "29K+ requests proof",
-  3: "HomeQuest AI",
-  4: "ICHOR Run Club — 500+",
-  5: "InsightRAG Pipeline",
-  6: "Pushkar Jain — AI / PM",
-  7: "biol.club — Campus Social",
-  8: "ICHOR Territory Wars",
-  9: "RAG Vector Architecture",
+// Captions and metadata for each gallery tile
+interface GalleryTileMeta {
+  title: string;
+  tag: string;
+  url?: string;
+  sectionId: string;
+}
+
+const GALLERY_META: Record<number, GalleryTileMeta> = {
+  0: {
+    title: "Pushkar Jain",
+    tag: "Profile",
+    sectionId: "about-section",
+  },
+  1: {
+    title: "biol.club",
+    tag: "Campus Social",
+    url: "https://www.biol.club",
+    sectionId: "biol-project",
+  },
+  2: {
+    title: "29,430 Requests",
+    tag: "biol Proof",
+    url: "https://www.biol.club",
+    sectionId: "biol-project",
+  },
+  3: {
+    title: "HomeQuest AI",
+    tag: "Real Estate",
+    url: "https://homequest1.vercel.app",
+    sectionId: "homequest-project",
+  },
+  4: {
+    title: "ICHOR Run Club",
+    tag: "500+ Community",
+    url: "https://ichor-xi.vercel.app",
+    sectionId: "ichor-project",
+  },
+  5: {
+    title: "InsightRAG",
+    tag: "Enterprise AI",
+    url: "https://rag-lac-ten.vercel.app/",
+    sectionId: "rag-project",
+  },
+  6: {
+    title: "Pushkar Jain",
+    tag: "AI & Product",
+    sectionId: "about-section",
+  },
+  7: {
+    title: "biol.club",
+    tag: "Live Social",
+    url: "https://www.biol.club",
+    sectionId: "biol-project",
+  },
+  8: {
+    title: "ICHOR Platform",
+    tag: "Territory Wars",
+    url: "https://ichor-xi.vercel.app",
+    sectionId: "ichor-project",
+  },
+  9: {
+    title: "InsightRAG Engine",
+    tag: "Vector Search",
+    url: "https://rag-lac-ten.vercel.app/",
+    sectionId: "rag-project",
+  },
 };
 
 /* Grid layout algorithm (per spec) */
@@ -66,6 +121,7 @@ function colsForWidth(w: number): number {
 /* ------------------------------------------------------------------ */
 
 interface Project {
+  id: string;
   title: string;
   role: string;
   tagline: string;
@@ -79,6 +135,7 @@ interface Project {
 
 const PROJECTS: Project[] = [
   {
+    id: "biol-project",
     title: "biol — Campus Social Platform",
     role: "Architect & PRD Lead",
     tagline:
@@ -110,6 +167,7 @@ const PROJECTS: Project[] = [
     img: "/img/shot-biol.png",
   },
   {
+    id: "ichor-project",
     title: "ICHOR — Social Fitness Platform",
     role: "Founder & Full-Stack Lead",
     tagline:
@@ -141,6 +199,7 @@ const PROJECTS: Project[] = [
     img: "/img/shot-ichor.png",
   },
   {
+    id: "homequest-project",
     title: "HomeQuest — AI Real Estate Marketplace",
     role: "Full-Stack Engineer",
     tagline:
@@ -155,12 +214,13 @@ const PROJECTS: Project[] = [
     img: "/img/shot-homequest.png",
   },
   {
+    id: "rag-project",
     title: "InsightRAG — Multi-tenant Document RAG Engine",
     role: "AI Systems Engineer",
     tagline:
       "Enterprise document processing pipeline with vector search, semantic embeddings, background job queues, and deterministic source citations.",
     scale: "Zero-Hallucination Pipeline",
-    href: "https://rag-lac-ten.vercel.app",
+    href: "https://rag-lac-ten.vercel.app/",
     tech: ["Next.js", "Groq", "Gemini AI", "BullMQ", "MongoDB", "Redis", "Tailwind CSS"],
     bullets: [
       "Designed chunking and embedding pipelines with vector search returning contextual document citations with every answer.",
@@ -1097,14 +1157,25 @@ export default function App() {
                     );
                   }
                   const imgSrc = GALLERY_IMAGES[tileIdx];
-                  const caption = GALLERY_CAPTIONS[tileIdx] ?? "";
+                  const meta = GALLERY_META[tileIdx] ?? {
+                    title: "Pushkar Jain",
+                    tag: "Dossier",
+                    sectionId: "about-section",
+                  };
                   const origin =
                     colIndex < cols / 2 ? "right bottom" : "left bottom";
 
                   return (
                     <div
                       key={i}
-                      className="bp-card"
+                      className="bp-card group"
+                      onClick={() => {
+                        if (meta.url) {
+                          window.open(meta.url, "_blank");
+                        } else {
+                          scrollToSection(meta.sectionId);
+                        }
+                      }}
                       style={{
                         aspectRatio: "2 / 3",
                         transform: "scale(0)",
@@ -1112,12 +1183,16 @@ export default function App() {
                         overflow: "hidden",
                         position: "relative",
                         background: "#111111",
-                        borderRadius: 4,
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        pointerEvents: "auto",
+                        border: "1px solid rgba(255, 255, 255, 0.15)",
+                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
                       }}
                     >
                       <img
                         src={imgSrc}
-                        alt={caption}
+                        alt={meta.title}
                         loading="lazy"
                         style={{
                           position: "absolute",
@@ -1129,27 +1204,140 @@ export default function App() {
                             tileIdx === 0 || tileIdx === 6 ? "center top" : "center center",
                         }}
                       />
-                      {caption && (
-                        <div
+
+                      {/* Top Bar: Tag & Quick Action */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 10,
+                          left: 10,
+                          right: 10,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          pointerEvents: "none",
+                          zIndex: 3,
+                        }}
+                      >
+                        <span
                           style={{
-                            position: "absolute",
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            padding: "20px 10px 8px",
-                            background:
-                              "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)",
                             fontFamily: "'Inter Tight', sans-serif",
+                            fontSize: cols === 2 ? 8 : 10,
                             fontWeight: 600,
-                            fontSize: cols === 2 ? 9 : 11,
-                            letterSpacing: "0.04em",
+                            letterSpacing: "0.06em",
                             textTransform: "uppercase",
-                            color: "rgba(255,255,255,0.85)",
+                            background: "rgba(0, 0, 0, 0.8)",
+                            backdropFilter: "blur(8px)",
+                            WebkitBackdropFilter: "blur(8px)",
+                            padding: "3px 8px",
+                            borderRadius: 9999,
+                            color: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid rgba(255, 255, 255, 0.2)",
                           }}
                         >
-                          {caption}
+                          {meta.tag}
+                        </span>
+
+                        {meta.url && (
+                          <span
+                            style={{
+                              fontFamily: "'Inter Tight', sans-serif",
+                              fontSize: cols === 2 ? 8 : 10,
+                              fontWeight: 600,
+                              letterSpacing: "0.04em",
+                              background: "#FFFFFF",
+                              color: "#000000",
+                              padding: "3px 8px",
+                              borderRadius: 9999,
+                              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.4)",
+                            }}
+                          >
+                            VISIT ↗
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Bottom Overlay with Title & Actions */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          padding: "26px 12px 12px",
+                          background:
+                            "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 65%, transparent 100%)",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 6,
+                          zIndex: 3,
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontFamily: "'Inter Tight', sans-serif",
+                            fontWeight: 600,
+                            fontSize: cols === 2 ? 11 : 13,
+                            letterSpacing: "-0.02em",
+                            color: "#FFFFFF",
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {meta.title}
                         </div>
-                      )}
+
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 6,
+                            alignItems: "center",
+                          }}
+                        >
+                          {meta.url && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(meta.url, "_blank");
+                              }}
+                              style={{
+                                fontFamily: "'Inter Tight', sans-serif",
+                                fontSize: cols === 2 ? 8 : 10,
+                                fontWeight: 600,
+                                letterSpacing: "0.04em",
+                                background: "rgba(255, 255, 255, 0.22)",
+                                backdropFilter: "blur(6px)",
+                                border: "1px solid rgba(255, 255, 255, 0.35)",
+                                padding: "3px 8px",
+                                borderRadius: 4,
+                                color: "#FFFFFF",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Live ↗
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              scrollToSection(meta.sectionId);
+                            }}
+                            style={{
+                              fontFamily: "'Inter Tight', sans-serif",
+                              fontSize: cols === 2 ? 8 : 10,
+                              fontWeight: 500,
+                              letterSpacing: "0.04em",
+                              background: "rgba(0, 0, 0, 0.6)",
+                              border: "1px solid rgba(255, 255, 255, 0.2)",
+                              padding: "3px 8px",
+                              borderRadius: 4,
+                              color: "rgba(255, 255, 255, 0.9)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            Specs ↓
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
@@ -1363,8 +1551,10 @@ export default function App() {
           >
             {PROJECTS.map((proj) => (
               <div
+                id={proj.id}
                 key={proj.title}
                 style={{
+                  scrollMarginTop: 100,
                   border: "1px solid #e4e4e7",
                   borderRadius: 20,
                   padding: isMobile ? 24 : 36,
