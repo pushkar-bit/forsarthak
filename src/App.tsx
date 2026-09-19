@@ -806,10 +806,7 @@ export default function App() {
               color: "#FFFFFF",
             }}
           >
-            Product &amp; AI Engineer — experienced in taking consumer digital
-            products from initial problem statement to deployment and active user
-            adoption. Proficient in PRD authoring, RAG architectures, gamification
-            retention, and growth strategy.
+            Product · Tech Management · Innovation
           </motion.div>
 
           {/* 1E. Main Landing Page Hero Portrait Card featuring imagetobeused.jpg */}
@@ -1585,20 +1582,16 @@ export default function App() {
 
             <p
               style={{
-                fontSize: isMobile ? 16 : 20,
-                lineHeight: 1.5,
-                color: "#3f3f46",
+                fontSize: isMobile ? 18 : 24,
+                lineHeight: 1.4,
+                color: "#18181b",
+                fontWeight: 500,
                 letterSpacing: "-0.02em",
                 margin: "0 0 24px 0",
                 maxWidth: 820,
               }}
             >
-              Product-minded Full-Stack and AI Engineer experienced in taking
-              consumer digital products from initial problem statement to
-              deployment and active user adoption. Proficient in end-to-end
-              product development, PRD authoring, user research, full-stack
-              architecture, RAG engine design, gamification mechanics, application
-              security hardening, and growth strategy.
+              Product · Tech Management · Innovation
             </p>
 
             {/* Quick stats pills */}
