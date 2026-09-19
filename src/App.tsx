@@ -1,113 +1,41 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 
-/* ------------------------------------------------------------------ */
-/*  CONTENT                                                            */
-/* ------------------------------------------------------------------ */
-
 const EASE: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
-const SYMBOLS = ["8", "$", "^^", "%", "/"];
+const SYMBOLS = ["PJ", "AI", ">>", "{}", "//"];
 
-type Tile =
-  | { kind: "image"; src: string; tag: string; caption: string }
-  | {
-      kind: "card";
-      tag: string;
-      title: string;
-      caption: string;
-      tech: string;
-      accent: string;
-      img?: string;
-      link?: string;
-    };
+const LEFT_VIDEO_URL =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_39ca84eAE1ODL9hbR5VhoEj8tBf/hf_20260625_154433_532a85d3-dabf-4265-b8bd-19ac6af31842.mp4";
+const RIGHT_VIDEO_URL =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_39ca84eAE1ODL9hbR5VhoEj8tBf/hf_20260625_154401_a664f076-b971-4557-8728-40ef9ea4c49b.mp4";
 
-/*
- * Gallery archive. Personal photos live in /public/img (drop yours in with
- * the filenames below). Project cards are self-contained and always render.
- */
-const TILES: Tile[] = [
-  {
-    kind: "image",
-    src: "/img/latenight.jpg",
-    tag: "02:39 · TUE 11 AUG",
-    caption:
-      "Built through the night. I wanted this opportunity too badly to sleep.",
-  },
-  {
-    kind: "card",
-    tag: "LIVE · FLAGSHIP",
-    title: "biol.club",
-    caption:
-      "My finest build. Cloudflare in front, a hardened backend behind — every feature ideated and cross-questioned against its failure cases before it shipped.",
-    tech: "NEXT.JS · CLOUDFLARE · SUPABASE · EDGE",
-    accent: "linear-gradient(135deg,#1b1b1b 0%,#3a2f5c 100%)",
-    img: "/img/shot-biol.png",
-    link: "https://www.biol.club",
-  },
-  {
-    kind: "image",
-    src: "/img/thumbs-a.jpg",
-    tag: "SHOWING UP",
-    caption: "Not the most-decorated stack in the room. The most consistent one.",
-  },
-  {
-    kind: "card",
-    tag: "IN PROGRESS · GAME",
-    title: "ichor",
-    caption:
-      "My other finest work — running, gamified. Every run claims ground; hold it, grow it, defend it. Overlap a rival's territory past the threshold and you can attack or conquer it. Multiple leaderboards turn running into culture.",
-    tech: "GEO-TERRITORY · REALTIME · CLANS · LEADERBOARDS",
-    accent: "linear-gradient(135deg,#141414 0%,#2a1c47 100%)",
-    img: "/img/shot-ichor.png",
-    link: "https://ichor-xi.vercel.app",
-  },
-  {
-    kind: "card",
-    tag: "AI · RAG",
-    title: "InsightRAG",
-    caption:
-      "Multi-tenant RAG: document upload, vector search and context-aware answers. Job queues, retries and guardrails so every answer maps back to its source — never a guess.",
-    tech: "NEXT.JS · GROQ · BULLMQ · MONGODB",
-    accent: "linear-gradient(135deg,#101010 0%,#1f3d5c 100%)",
-    img: "/img/shot-rag.png",
-    link: "https://rag-lac-ten.vercel.app",
-  },
-  {
-    kind: "image",
-    src: "/img/thumbs-b.jpg",
-    tag: "ALL IN",
-    caption: "I don't quit on a thing when it goes up and down. I finish it.",
-  },
-  {
-    kind: "card",
-    tag: "AI · MARKETPLACE",
-    title: "HomeQuest",
-    caption:
-      "Full-stack real-estate platform — listings, live chat, AI-assisted queries — built to cut the broker out of the buyer–agent handshake.",
-    tech: "REACT · NODE · MYSQL · SOCKET.IO · GPT-4o",
-    accent: "linear-gradient(135deg,#111111 0%,#2f5c3a 100%)",
-    img: "/img/shot-homequest.png",
-    link: "https://homequest1.vercel.app",
-  },
-  {
-    kind: "card",
-    tag: "HOW I BUILD",
-    title: "Fails-last engineering",
-    caption:
-      "Every feature gets an ideation pass and a cross-question: what breaks it, what's the consequence, what's the fallback. That's why the things I ship stay up.",
-    tech: "IDEATE → CROSS-QUESTION → HARDEN → SHIP",
-    accent: "linear-gradient(135deg,#141414 0%,#333333 100%)",
-  },
-  {
-    kind: "card",
-    tag: "WHAT I BRING",
-    title: "More than a stack",
-    caption:
-      "Consistency is just one of them. Commitment I actually owe, ownership of the product, relentless follow-through when things swing up and down, creativity, and the will to prove myself every single day — up for every sleepless night it takes.",
-    tech: "COMMITMENT · OWNERSHIP · GRIT · CONSISTENCY",
-    accent: "linear-gradient(135deg,#1a1a1a 0%,#5c4a1f 100%)",
-  },
+// Gallery: only real project screenshots + Pushkar's photo
+const GALLERY_IMAGES = [
+  "/img/pushkar-selfie.png",
+  "/img/shot-biol.png",
+  "/img/biol-proof.png",
+  "/img/shot-homequest.png",
+  "/img/shot-ichor.png",
+  "/img/shot-rag.png",
+  "/img/shot-biol.png",
+  "/img/shot-homequest.png",
+  "/img/shot-ichor.png",
+  "/img/shot-rag.png",
 ];
+
+// Captions for each gallery tile
+const GALLERY_CAPTIONS: Record<number, string> = {
+  0: "Pushkar Jain",
+  1: "biol.club",
+  2: "29K+ requests",
+  3: "HomeQuest AI",
+  4: "ICHOR Run Club",
+  5: "RAG Pipeline",
+  6: "biol.club",
+  7: "HomeQuest AI",
+  8: "ICHOR Run Club",
+  9: "RAG Pipeline",
+};
 
 /* Grid layout algorithm (per spec) */
 function buildLayout(count: number, cols: number): number[][] {
@@ -135,10 +63,6 @@ function colsForWidth(w: number): number {
   return 4;
 }
 
-/* ------------------------------------------------------------------ */
-/*  COMPONENT                                                          */
-/* ------------------------------------------------------------------ */
-
 export default function App() {
   const rootRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -150,28 +74,38 @@ export default function App() {
   const outroBuyRef = useRef<HTMLAnchorElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const circleRef = useRef<HTMLSpanElement>(null);
-  const fxRef = useRef<HTMLDivElement>(null);
-  const maxScrollRef = useRef(0);
+  const leftVideoRef = useRef<HTMLVideoElement>(null);
+  const rightVideoRef = useRef<HTMLVideoElement>(null);
 
-  const [touch] = useState(
+  const maxScrollRef = useRef(0);
+  const activeSideRef = useRef<"left" | "right">("right");
+
+  const [touch, setTouch] = useState(
     () =>
       typeof window !== "undefined" &&
-      window.matchMedia("(pointer: coarse)").matches
+      (window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024)
   );
+
   const [cols, setCols] = useState(() =>
     typeof window !== "undefined" ? colsForWidth(window.innerWidth) : 4
   );
 
-  const layout = useMemo(() => buildLayout(TILES.length, cols), [cols]);
+  const [videosReady, setVideosReady] = useState(false);
 
-  /* keep column count in sync with viewport */
+  const layout = useMemo(() => buildLayout(GALLERY_IMAGES.length, cols), [cols]);
+
+  /* Resize listener */
   useEffect(() => {
-    const onResize = () => setCols(colsForWidth(window.innerWidth));
+    const onResize = () => {
+      const w = window.innerWidth;
+      setCols(colsForWidth(w));
+      setTouch(window.matchMedia("(pointer: coarse)").matches || w < 1024);
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  /* custom cursor (desktop only) */
+  /* Custom cursor for desktop */
   useEffect(() => {
     if (touch) return;
     const move = (e: MouseEvent) => {
@@ -184,7 +118,132 @@ export default function App() {
     return () => window.removeEventListener("mousemove", move);
   }, [touch]);
 
-  /* circle symbol randomises on scroll, throttled ~80ms */
+  /* Video loading and playback */
+  useEffect(() => {
+    const left = leftVideoRef.current;
+    const right = rightVideoRef.current;
+    if (!left || !right) return;
+
+    let leftLoaded = false;
+    let rightLoaded = false;
+
+    const checkReady = () => {
+      if (leftLoaded && rightLoaded) {
+        setVideosReady(true);
+      }
+    };
+
+    const onLeftLoad = () => {
+      leftLoaded = true;
+      checkReady();
+    };
+
+    const onRightLoad = () => {
+      rightLoaded = true;
+      checkReady();
+    };
+
+    left.addEventListener("loadeddata", onLeftLoad);
+    right.addEventListener("loadeddata", onRightLoad);
+
+    if (left.readyState >= 2) leftLoaded = true;
+    if (right.readyState >= 2) rightLoaded = true;
+    checkReady();
+
+    /* Touch autoplay alternate loop */
+    if (touch) {
+      left.style.display = "block";
+      right.style.display = "none";
+      left.play().catch(() => {});
+
+      const onLeftEnded = () => {
+        left.style.display = "none";
+        right.style.display = "block";
+        right.currentTime = 0;
+        right.play().catch(() => {});
+      };
+
+      const onRightEnded = () => {
+        right.style.display = "none";
+        left.style.display = "block";
+        left.currentTime = 0;
+        left.play().catch(() => {});
+      };
+
+      left.addEventListener("ended", onLeftEnded);
+      right.addEventListener("ended", onRightEnded);
+
+      return () => {
+        left.removeEventListener("loadeddata", onLeftLoad);
+        right.removeEventListener("loadeddata", onRightLoad);
+        left.removeEventListener("ended", onLeftEnded);
+        right.removeEventListener("ended", onRightEnded);
+      };
+    }
+
+    /* Desktop cursor-scrub interaction */
+    let rafId = 0;
+    let targetLeftTime = 0;
+    let targetRightTime = 0;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const w = window.innerWidth;
+      const center = w / 2;
+      const deadZone = Math.max(30, w * 0.05);
+
+      if (e.clientX >= center - deadZone && e.clientX <= center + deadZone) {
+        targetLeftTime = 0;
+        targetRightTime = 0;
+      } else if (e.clientX < center - deadZone) {
+        activeSideRef.current = "right";
+        const range = center - deadZone;
+        const dist = center - deadZone - e.clientX;
+        const progress = Math.max(0, Math.min(1, dist / range));
+        if (right.duration) {
+          targetRightTime = progress * right.duration;
+        }
+      } else {
+        activeSideRef.current = "left";
+        const range = w - (center + deadZone);
+        const dist = e.clientX - (center + deadZone);
+        const progress = Math.max(0, Math.min(1, dist / range));
+        if (left.duration) {
+          targetLeftTime = progress * left.duration;
+        }
+      }
+    };
+
+    const scrubLoop = () => {
+      if (activeSideRef.current === "right") {
+        if (right.style.display !== "block") right.style.display = "block";
+        if (left.style.display !== "none") left.style.display = "none";
+
+        if (!right.seeking && right.duration && Math.abs(right.currentTime - targetRightTime) > 0.03) {
+          right.currentTime = targetRightTime;
+        }
+      } else {
+        if (left.style.display !== "block") left.style.display = "block";
+        if (right.style.display !== "none") right.style.display = "none";
+
+        if (!left.seeking && left.duration && Math.abs(left.currentTime - targetLeftTime) > 0.03) {
+          left.currentTime = targetLeftTime;
+        }
+      }
+      rafId = requestAnimationFrame(scrubLoop);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    rafId = requestAnimationFrame(scrubLoop);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(rafId);
+      left.removeEventListener("loadeddata", onLeftLoad);
+      right.removeEventListener("loadeddata", onRightLoad);
+    };
+  }, [touch]);
+
+  /* Circle symbol randomizer on scroll throttled to 80ms */
   useEffect(() => {
     let last = 0;
     const onScroll = () => {
@@ -192,13 +251,15 @@ export default function App() {
       if (now - last < 80) return;
       last = now;
       const el = circleRef.current;
-      if (el) el.textContent = SYMBOLS[(Math.random() * SYMBOLS.length) | 0];
+      if (el) {
+        el.textContent = SYMBOLS[(Math.random() * SYMBOLS.length) | 0];
+      }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* main RAF scroll engine */
+  /* Main RAF scroll engine */
   useEffect(() => {
     const setSizes = () => {
       const vh = window.innerHeight;
@@ -206,11 +267,12 @@ export default function App() {
       if (!wrap) return;
       const maxScroll = Math.max(0, wrap.scrollHeight - vh);
       maxScrollRef.current = maxScroll;
-      if (rootRef.current)
+      if (rootRef.current) {
         rootRef.current.style.height = `${vh + maxScroll + 2 * vh}px`;
+      }
     };
+
     setSizes();
-    // re-measure after fonts/images settle
     const t = window.setTimeout(setSizes, 400);
     window.addEventListener("resize", setSizes);
     window.addEventListener("load", setSizes);
@@ -219,23 +281,15 @@ export default function App() {
       ? Array.from(wrapRef.current.querySelectorAll<HTMLElement>(".bp-card"))
       : [];
 
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-    let smoothY = window.scrollY;
-    const lerp = reduced ? 1 : touch ? 0.16 : 0.1;
     let raf = 0;
     const loop = () => {
       const vh = window.innerHeight;
-      const realY = window.scrollY;
-      // eased inertia: visuals trail the raw scroll for a fluid, high-end feel
-      smoothY += (realY - smoothY) * lerp;
-      if (Math.abs(realY - smoothY) < 0.3) smoothY = realY;
-      const y = smoothY;
+      const y = window.scrollY;
       const maxScroll = maxScrollRef.current;
 
       let panelOffset: number;
       let wrapTranslate: number;
+
       if (y <= vh) {
         panelOffset = vh - y;
         wrapTranslate = 0;
@@ -243,58 +297,53 @@ export default function App() {
         panelOffset = 0;
         wrapTranslate = -Math.min(y - vh, maxScroll);
       }
-      if (panelRef.current)
-        panelRef.current.style.transform = `translateY(${panelOffset}px)`;
-      if (wrapRef.current)
-        wrapRef.current.style.transform = `translateY(${wrapTranslate}px)`;
-      if (heroRef.current)
-        heroRef.current.style.visibility = y > vh ? "hidden" : "visible";
 
-      const rotMax = reduced ? 0 : touch ? 11 : 5;
-      const parMax = reduced ? 0 : touch ? 54 : 26;
-      for (const el of cards) {
-        const h = el.offsetHeight;
-        const top = panelOffset + wrapTranslate + el.offsetTop;
-        const bottom = top + h;
-        if (bottom <= 0 || top >= vh) {
-          el.style.transform = "scale(0)";
-          el.style.opacity = "0";
-          continue;
-        }
-        const enter = Math.min(1, (vh - top) / (vh * 0.6));
-        const exit = Math.min(1, bottom / (vh * 0.4));
-        const presence = Math.max(0, Math.min(enter, exit));
-        // signed distance of the card centre from the viewport centre (~ -0.5..0.5)
-        const d = (top + h / 2 - vh / 2) / vh;
-        const dir = Number(el.dataset.dir || "1");
-        // swing harder at the edges, settle upright when centred
-        const rot = d * rotMax * dir * (1 - presence * 0.4);
-        const ty = -d * parMax;
-        el.style.opacity = String(Math.min(1, presence * 1.5));
-        el.style.transform = `translateY(${ty.toFixed(2)}px) scale(${presence.toFixed(
-          3
-        )}) rotate(${rot.toFixed(2)}deg)`;
+      if (panelRef.current) {
+        panelRef.current.style.transform = `translateY(${panelOffset}px)`;
+      }
+      if (wrapRef.current) {
+        wrapRef.current.style.transform = `translateY(${wrapTranslate}px)`;
+      }
+      if (heroRef.current) {
+        heroRef.current.style.visibility = y > vh ? "hidden" : "visible";
       }
 
-      const outroOffset = window.innerWidth < 640 ? 132 : 166;
+      for (const el of cards) {
+        const top = panelOffset + wrapTranslate + el.offsetTop;
+        const bottom = top + el.offsetHeight;
+        let scale: number;
+        if (bottom <= 0 || top >= vh) {
+          scale = 0;
+        } else {
+          const enter = Math.min(1, (vh - top) / (vh * 0.6));
+          const exit = Math.min(1, bottom / (vh * 0.4));
+          scale = Math.max(0, Math.min(enter, exit));
+        }
+        el.style.transform = `scale(${scale})`;
+      }
+
+      const isMobileScreen = window.innerWidth < 640;
+      const outroOffset = isMobileScreen ? 132 : 166;
       const outroStart = vh + maxScroll;
       const denom = Math.max(1, vh - 100);
       const p = Math.max(0, Math.min(1, (y - outroStart) / denom));
-      if (overlayRef.current) overlayRef.current.style.opacity = String(p);
-      if (footerRef.current) footerRef.current.style.opacity = String(p);
-      if (outroInfoRef.current)
-        outroInfoRef.current.style.transform = `translateY(${-p * outroOffset}px)`;
-      if (outroBuyRef.current)
-        outroBuyRef.current.style.transform = `scale(${p})`;
 
-      // hand off to the normal-flow About section once the outro is fully white
-      // (uses the raw scroll so the fixed layer clears exactly as About arrives)
-      const hideAt = vh + maxScroll + vh - 140;
-      if (fxRef.current)
-        fxRef.current.style.visibility = realY > hideAt ? "hidden" : "visible";
+      if (overlayRef.current) {
+        overlayRef.current.style.opacity = String(p);
+      }
+      if (footerRef.current) {
+        footerRef.current.style.opacity = String(p);
+      }
+      if (outroInfoRef.current) {
+        outroInfoRef.current.style.transform = `translateY(${-p * outroOffset}px)`;
+      }
+      if (outroBuyRef.current) {
+        outroBuyRef.current.style.transform = `scale(${p})`;
+      }
 
       raf = requestAnimationFrame(loop);
     };
+
     raf = requestAnimationFrame(loop);
 
     return () => {
@@ -306,22 +355,33 @@ export default function App() {
   }, [cols]);
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+  const isTablet =
+    typeof window !== "undefined" &&
+    window.innerWidth >= 640 &&
+    window.innerWidth < 1024;
+
+  const logoWidth = isMobile ? 160 : isTablet ? 280 : 380;
+  const captionTop = isMobile ? 130 : isTablet ? 195 : 264;
+  const captionWidth = isMobile
+    ? "calc(100vw - 32px)"
+    : isTablet
+      ? "calc(50vw - 48px)"
+      : "580px";
 
   return (
-    <>
     <div
       ref={rootRef}
       id="scroll-spacer"
       style={{
         position: "relative",
         userSelect: "none",
-        background: "#fff",
+        background: "#ffffff",
         height: "500vh",
         cursor: touch ? "auto" : "none",
+        fontFamily: "'Inter Tight', sans-serif",
       }}
     >
-      <div ref={fxRef}>
-      {/* ---------- CUSTOM CURSOR ---------- */}
+      {/* 1A. Custom Cursor (Desktop Only) */}
       {!touch && (
         <div
           ref={cursorRef}
@@ -331,15 +391,15 @@ export default function App() {
             top: 0,
             zIndex: 50,
             pointerEvents: "none",
-            transform: "translate(-50%,-50%)",
+            transform: "translate(-50%, -50%)",
             mixBlendMode: "exclusion",
           }}
         >
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-            <circle cx="24" cy="24" r="22.75" stroke="#fff" strokeWidth="2.5" />
+            <circle cx="24" cy="24" r="22.75" stroke="#FFFFFF" strokeWidth="2.5" />
             <path
               d="M24 12v24M14 18c4 3 16 3 20 0M14 30c4-3 16-3 20 0"
-              stroke="#fff"
+              stroke="#FFFFFF"
               strokeWidth="1.6"
               strokeLinecap="round"
             />
@@ -347,47 +407,62 @@ export default function App() {
         </div>
       )}
 
-      {/* ---------- HERO BACKGROUND ---------- */}
+      {/* 1G. Video Container */}
       <div
         ref={heroRef}
         id="main-canvas"
         style={{
           position: "fixed",
-          inset: 0,
+          inset: isMobile ? undefined : 0,
+          left: isMobile ? 0 : undefined,
+          top: isMobile ? 220 : undefined,
+          width: isMobile ? "100vw" : "100%",
+          height: isMobile ? "calc(100vh - 220px)" : "100%",
           zIndex: 0,
           overflow: "hidden",
           pointerEvents: "none",
-          background: "#0a0a0a",
+          background: "#000000",
+          opacity: videosReady ? 1 : 0,
+          transition: "opacity 0.3s ease",
         }}
       >
-        <img
-          src="/img/hero.jpg"
-          alt=""
-          onError={(e) => (e.currentTarget.style.opacity = "0")}
+        <video
+          ref={leftVideoRef}
+          src={LEFT_VIDEO_URL}
+          muted
+          playsInline
+          preload="auto"
           style={{
             position: "absolute",
             inset: 0,
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            animation: "heroZoom 18s ease-in-out infinite alternate",
+            display: "none",
           }}
         />
-        <div
+        <video
+          ref={rightVideoRef}
+          src={RIGHT_VIDEO_URL}
+          muted
+          playsInline
+          preload="auto"
           style={{
             position: "absolute",
             inset: 0,
-            background:
-              "radial-gradient(120% 90% at 70% 30%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55) 100%)",
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
           }}
         />
       </div>
 
-      {/* ---------- LOGO ---------- */}
+      {/* 1B. Logo (Top Left) */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: EASE }}
+        transition={{ duration: 0.6, ease: EASE, delay: 0 }}
         style={{
           position: "fixed",
           top: isMobile ? 16 : 32,
@@ -395,42 +470,33 @@ export default function App() {
           zIndex: 20,
           pointerEvents: "none",
           mixBlendMode: "exclusion",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
+          width: logoWidth,
         }}
       >
-        <span
-          style={{
-            fontWeight: 600,
-            letterSpacing: "-0.05em",
-            color: "#fff",
-            fontSize: isMobile ? 34 : 64,
-            lineHeight: 1,
-          }}
+        <svg
+          viewBox="0 0 380 80"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ width: "100%", height: "auto", display: "block" }}
         >
-          pushkar
-        </span>
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: isMobile ? 18 : 30,
-            height: isMobile ? 18 : 30,
-            borderRadius: "50%",
-            border: "2px solid #fff",
-            color: "#fff",
-            fontSize: isMobile ? 9 : 14,
-            fontWeight: 600,
-            marginTop: isMobile ? 6 : 12,
-          }}
-        >
-          R
-        </span>
+          {/* Name wordmark */}
+          <text
+            x="0"
+            y="64"
+            fill="#FFFFFF"
+            fontFamily="'Inter Tight', sans-serif"
+            fontWeight="600"
+            fontSize="68"
+            letterSpacing="-0.05em"
+          >
+            Pushkar
+          </text>
+          {/* Dot accent */}
+          <circle cx="368" cy="14" r="10" fill="#FFFFFF" />
+        </svg>
       </motion.div>
 
-      {/* ---------- CAPTION ---------- */}
+      {/* 1C. Caption (Below Logo, Left Side) */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -438,25 +504,26 @@ export default function App() {
         style={{
           position: "fixed",
           left: isMobile ? 16 : 32,
-          top: isMobile ? 118 : 130,
-          width: isMobile ? "calc(100vw - 32px)" : 480,
+          top: captionTop,
+          width: captionWidth,
           zIndex: 20,
           pointerEvents: "none",
           mixBlendMode: "exclusion",
+          fontFamily: "'Inter Tight', sans-serif",
           fontWeight: 500,
           fontSize: 12,
-          lineHeight: "150%",
-          letterSpacing: "-0.03em",
-          color: "#fff",
+          lineHeight: "140%",
+          letterSpacing: "-0.04em",
+          color: "#FFFFFF",
         }}
       >
-        For Sarthak Singhal. My worth isn't the stack — it's the consistency
-        behind it. I owe commitments, not excuses, and I'll get the work done no
-        matter how the days go up and down. Up for every sleepless night the
-        product needs.
+        Product &amp; AI Engineer — I take consumer products from the
+        problem statement through the PRD, architecture, and launch, to
+        real users on the other side. Delhi, India · Newton School of
+        Technology.
       </motion.div>
 
-      {/* ---------- HEADER NAV ---------- */}
+      {/* NAV (Top Right) */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -465,8 +532,8 @@ export default function App() {
           position: "fixed",
           top: isMobile ? 16 : 32,
           right: isMobile ? 16 : 32,
+          width: isMobile ? "auto" : 380,
           height: 30,
-          width: isMobile ? "auto" : 340,
           zIndex: 20,
           pointerEvents: "none",
           mixBlendMode: "exclusion",
@@ -476,57 +543,60 @@ export default function App() {
         }}
       >
         {!isMobile && (
-          <span
-            onClick={() =>
-              document
-                .getElementById("about")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-            style={{
-              fontWeight: 500,
-              fontSize: 15,
-              textTransform: "uppercase",
-              color: "#fff",
-              pointerEvents: "auto",
-              cursor: "pointer",
-            }}
-          >
-            About
-          </span>
+          <>
+            {["WORK", "SKILLS", "CONTACT"].map((label) => (
+              <span
+                key={label}
+                style={{
+                  fontFamily: "'Inter Tight', sans-serif",
+                  fontWeight: 500,
+                  fontSize: 13,
+                  textTransform: "uppercase",
+                  color: "#FFFFFF",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {label}
+              </span>
+            ))}
+          </>
         )}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: isMobile ? 20 : 40,
+            gap: isMobile ? 16 : 32,
           }}
         >
           <svg
-            width={isMobile ? 24 : 30}
-            height={isMobile ? 24 : 30}
+            width={isMobile ? 24 : 28}
+            height={isMobile ? 24 : 28}
             viewBox="0 0 40 40"
             fill="none"
           >
-            <path d="M0 14H40" stroke="#fff" strokeWidth="2.5" />
-            <path d="M0 26H40" stroke="#fff" strokeWidth="2.5" />
+            <path d="M0 14H40" stroke="#FFFFFF" strokeWidth="2.5" />
+            <path d="M0 26H40" stroke="#FFFFFF" strokeWidth="2.5" />
           </svg>
           <span
             style={{
+              fontFamily: "'Inter Tight', sans-serif",
               fontWeight: 500,
-              fontSize: isMobile ? 13 : 15,
-              color: "#fff",
+              fontSize: isMobile ? 12 : 13,
+              color: "#FFFFFF",
               whiteSpace: "nowrap",
+              letterSpacing: "0.02em",
             }}
           >
-            [ FOR SARTHAK ]
+            [ HIRE ME ]
           </span>
         </div>
       </motion.div>
 
-      {/* ---------- PRODUCT INFO ---------- */}
+      {/* 1E. Product Info (Bottom Right) */}
       <motion.div
         ref={outroInfoRef}
         id="outro-info"
+        data-outro-offset={isMobile ? 132 : 166}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, ease: EASE, delay: 0.45 }}
@@ -550,9 +620,10 @@ export default function App() {
             flexDirection: "column",
             alignItems: "flex-start",
             width: isMobile ? 252 : "100%",
-            marginBottom: isMobile ? 12 : 28,
+            marginBottom: isMobile ? 12 : 32,
           }}
         >
+          {/* Circle icon */}
           <div
             style={{
               position: "relative",
@@ -572,96 +643,120 @@ export default function App() {
                 cx="20"
                 cy="20"
                 r="18.75"
-                stroke="#fff"
+                stroke="#FFFFFF"
                 strokeWidth={isMobile ? 2 : 2.5}
               />
             </svg>
             <span
               ref={circleRef}
+              id="circle-symbol"
               style={{
                 position: "absolute",
                 inset: 0,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                fontFamily: "'Inter Tight', sans-serif",
                 fontWeight: 500,
                 fontSize: isMobile ? 10 : 15,
                 letterSpacing: "-0.04em",
                 textTransform: "uppercase",
-                color: "#fff",
+                color: "#FFFFFF",
               }}
             >
               8
             </span>
           </div>
+
+          {/* Identity label */}
           <div
             style={{
+              fontFamily: "'Inter Tight', sans-serif",
               fontWeight: 500,
-              fontSize: isMobile ? 20 : 30,
+              fontSize: isMobile ? 18 : 26,
               lineHeight: "100%",
-              textAlign: "center",
+              textAlign: "left",
               letterSpacing: "-0.04em",
               textTransform: "uppercase",
-              color: "#fff",
+              color: "#FFFFFF",
             }}
           >
-            PROOF-OF-WORK
+            PRODUCT &amp; AI
             <br />
-            "COMMITMENT"
+            ENGINEER
           </div>
         </div>
+
+        {/* Big stat number */}
         <div
           style={{
+            fontFamily: "'Inter Tight', sans-serif",
             fontWeight: 500,
-            fontSize: isMobile ? 60 : 80,
+            fontSize: isMobile ? 56 : 76,
             lineHeight: "100%",
             textAlign: "center",
             letterSpacing: "-0.04em",
-            color: "#fff",
+            color: "#FFFFFF",
           }}
         >
-          ∞
+          29K+
+        </div>
+        <div
+          style={{
+            fontFamily: "'Inter Tight', sans-serif",
+            fontWeight: 500,
+            fontSize: isMobile ? 10 : 12,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+            color: "#FFFFFF",
+            opacity: 0.7,
+            marginTop: 4,
+          }}
+        >
+          requests on biol
         </div>
       </motion.div>
 
-      {/* ---------- VIEW BUTTON (outro) ---------- */}
+      {/* CTA "hire" button — appears on outro */}
       <a
+        href="mailto:pushkar.jain2024@nst.rishihood.edu.in"
         ref={outroBuyRef}
-        href="https://www.biol.club"
-        target="_blank"
-        rel="noreferrer"
         id="outro-buy"
         style={{
           position: "fixed",
           right: isMobile ? 16 : 32,
           left: isMobile ? 16 : "auto",
           bottom: isMobile ? 60 : 32,
-          width: isMobile ? "auto" : 330,
+          width: isMobile ? "calc(100vw - 32px)" : 330,
           height: isMobile ? 100 : 174,
-          zIndex: 21,
+          zIndex: 20,
+          pointerEvents: "auto",
+          mixBlendMode: "exclusion",
           transformOrigin: "right bottom",
           transform: "scale(0)",
-          background: "#fff",
+          background: "#FFFFFF",
           borderRadius: 1335,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          textDecoration: "none",
         }}
       >
         <span
           style={{
+            fontFamily: "'Inter Tight', sans-serif",
             fontWeight: 500,
-            fontSize: isMobile ? 72 : 110,
+            fontSize: isMobile ? 60 : 96,
             letterSpacing: "-0.04em",
-            color: "#fff",
+            color: "#FFFFFF",
             mixBlendMode: "exclusion",
           }}
         >
-          view
+          hire
         </span>
       </a>
 
-      {/* ---------- WHITE OVERLAY ---------- */}
+      {/* 1I. White Overlay */}
       <div
         ref={overlayRef}
         id="outro-overlay"
@@ -670,12 +765,12 @@ export default function App() {
           inset: 0,
           zIndex: 12,
           pointerEvents: "none",
-          background: "#fff",
+          background: "#FFFFFF",
           opacity: 0,
         }}
       />
 
-      {/* ---------- FOOTER ---------- */}
+      {/* 1J. Footer */}
       <div
         ref={footerRef}
         id="outro-footer"
@@ -691,25 +786,27 @@ export default function App() {
           display: "flex",
           gap: isMobile ? 0 : 80,
           justifyContent: isMobile ? "space-between" : "flex-start",
+          fontFamily: "'Inter Tight', sans-serif",
           fontWeight: 500,
           fontSize: isMobile ? 11 : 13,
           letterSpacing: "-0.02em",
           textTransform: "uppercase",
-          color: "#fff",
+          color: "#FFFFFF",
         }}
       >
-        <span>PUSHKAR JAIN · 2026</span>
-        <span>BUILT FOR THE PITCH</span>
+        <span>Pushkar Jain © 2026</span>
+        <span>Delhi, India</span>
+        {!isMobile && <span>@ichor.club</span>}
       </div>
 
-      {/* ---------- BLACK PANEL (GALLERY) ---------- */}
+      {/* SECTION 2: Black Panel (Gallery) */}
       <div
         ref={panelRef}
         style={{
           position: "fixed",
           inset: 0,
           zIndex: 10,
-          background: "#000",
+          background: "#000000",
           transform: "translateY(100vh)",
         }}
       >
@@ -737,873 +834,63 @@ export default function App() {
                   <div key={i} style={{ aspectRatio: "2 / 3" }} aria-hidden />
                 );
               }
-              const tile = TILES[tileIdx];
-              const leftHalf = colIndex < cols / 2;
-              const origin = leftHalf ? "right bottom" : "left bottom";
+              const imgSrc = GALLERY_IMAGES[tileIdx];
+              const caption = GALLERY_CAPTIONS[tileIdx] ?? "";
+              const origin =
+                colIndex < cols / 2 ? "right bottom" : "left bottom";
+
               return (
                 <div
                   key={i}
                   className="bp-card"
-                  data-dir={leftHalf ? -1 : 1}
                   style={{
                     aspectRatio: "2 / 3",
                     transform: "scale(0)",
                     transformOrigin: origin,
-                    opacity: 0,
+                    overflow: "hidden",
+                    position: "relative",
+                    background: "#111111",
                   }}
                 >
-                  <TileView tile={tile} />
+                  <img
+                    src={imgSrc}
+                    alt={caption}
+                    loading="lazy"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: tileIdx === 0 ? "center top" : "center center",
+                    }}
+                  />
+                  {caption && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        padding: "20px 10px 8px",
+                        background:
+                          "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%)",
+                        fontFamily: "'Inter Tight', sans-serif",
+                        fontWeight: 500,
+                        fontSize: cols === 2 ? 9 : 11,
+                        letterSpacing: "0.04em",
+                        textTransform: "uppercase",
+                        color: "rgba(255,255,255,0.75)",
+                      }}
+                    >
+                      {caption}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         </div>
-      </div>
-      </div>
-    </div>
-    <AboutSection isMobile={isMobile} />
-    </>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  TILE RENDERER                                                      */
-/* ------------------------------------------------------------------ */
-
-function TileView({ tile }: { tile: Tile }) {
-  if (tile.kind === "image") {
-    return (
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          height: "100%",
-          overflow: "hidden",
-          borderRadius: 4,
-          background: "linear-gradient(135deg,#1a1a1a 0%,#2a2438 100%)",
-        }}
-      >
-        <img
-          src={tile.src}
-          alt={tile.caption}
-          loading="lazy"
-          onError={(e) => (e.currentTarget.style.opacity = "0")}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%)",
-          }}
-        />
-        <TileCaption tag={tile.tag} caption={tile.caption} />
-      </div>
-    );
-  }
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-        borderRadius: 4,
-        background: tile.accent,
-        border: "1px solid rgba(255,255,255,0.08)",
-      }}
-    >
-      {tile.img && (
-        <>
-          <img
-            src={tile.img}
-            alt={tile.title}
-            loading="lazy"
-            onError={(e) => (e.currentTarget.style.opacity = "0")}
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "top center",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.6) 68%, rgba(0,0,0,0.92) 100%)",
-            }}
-          />
-        </>
-      )}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          padding: "clamp(14px,1.6vw,22px)",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-        }}
-      >
-        <div
-          style={{
-            alignSelf: "flex-start",
-            fontSize: 10,
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            color: "rgba(255,255,255,0.92)",
-            textTransform: "uppercase",
-            background: "rgba(0,0,0,0.5)",
-            border: "1px solid rgba(255,255,255,0.14)",
-            borderRadius: 100,
-            padding: "4px 9px",
-            backdropFilter: "blur(4px)",
-          }}
-        >
-          {tile.tag}
-        </div>
-        <div>
-          <div
-            style={{
-              fontSize: "clamp(20px,2.4vw,34px)",
-              fontWeight: 600,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.02,
-              color: "#fff",
-              marginBottom: 10,
-              textShadow: tile.img ? "0 1px 16px rgba(0,0,0,0.7)" : "none",
-            }}
-          >
-            {tile.title}
-          </div>
-          <div
-            style={{
-              fontSize: "clamp(11px,0.95vw,13px)",
-              fontWeight: 400,
-              lineHeight: 1.45,
-              color: "rgba(255,255,255,0.72)",
-            }}
-          >
-            {tile.caption}
-          </div>
-        </div>
-        <div
-          style={{
-            fontSize: 9.5,
-            fontWeight: 500,
-            letterSpacing: "0.06em",
-            color: "rgba(255,255,255,0.5)",
-            textTransform: "uppercase",
-            borderTop: "1px solid rgba(255,255,255,0.12)",
-            paddingTop: 10,
-          }}
-        >
-          {tile.tech}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  ABOUT SECTION (normal flow, scrolls in after the outro)           */
-/* ------------------------------------------------------------------ */
-
-const QUALITIES: { title: string; desc: string }[] = [
-  {
-    title: "Commitment I actually owe",
-    desc: "I treat a commitment like a debt. If I said it, it ships — no matter how, no matter the hour.",
-  },
-  {
-    title: "Unlimited consistency",
-    desc: "Not a burst of effort. Showing up and moving the product forward every single day.",
-  },
-  {
-    title: "Relentless follow-through",
-    desc: "Things go up and down; I don't. I don't quit on a thing halfway — I finish what I start.",
-  },
-  {
-    title: "Ownership",
-    desc: "I want to be connected to the product and the business, not just close tickets and log off.",
-  },
-  {
-    title: "The will to prove myself",
-    desc: "This is the opportunity I want to earn, so I'll prove I'm worth it — daily, not once.",
-  },
-  {
-    title: "Endurance",
-    desc: "Up for every sleepless night the product needs. I mean it — this site was built at 02:39.",
-  },
-  {
-    title: "Creativity",
-    desc: "biol.club and ichor exist because I chase ideas most people wouldn't attempt, and finish them.",
-  },
-  {
-    title: "Fails-last engineering",
-    desc: "Every feature ideated and cross-questioned against its failure cases and consequences before it ships.",
-  },
-  {
-    title: "Adaptability & fast learning",
-    desc: "My stack keeps growing because I learn whatever the product needs, fast.",
-  },
-];
-
-const FOCUS = [
-  { label: "Frontend — React & Next.js", pct: 92 },
-  { label: "TypeScript / JavaScript", pct: 90 },
-  { label: "AI — RAG, GenAI, LLM apps", pct: 86 },
-  { label: "Backend — Node.js & Express", pct: 84 },
-  { label: "UI / Design — Tailwind, Figma", pct: 82 },
-  { label: "Python & Data — NumPy, Pandas", pct: 78 },
-];
-
-const SKILL_GROUPS: { title: string; items: string[] }[] = [
-  {
-    title: "Languages",
-    items: ["TypeScript", "JavaScript", "Python", "C", "SQL", "DSA"],
-  },
-  {
-    title: "Frontend",
-    items: ["React", "Next.js", "React Native", "Tailwind CSS", "HTML", "CSS"],
-  },
-  {
-    title: "Backend & Data",
-    items: [
-      "Node.js",
-      "Express.js",
-      "MongoDB",
-      "MySQL",
-      "PostgreSQL",
-      "Prisma",
-      "Supabase",
-      "Firebase",
-      "BullMQ",
-      "Socket.io",
-    ],
-  },
-  {
-    title: "AI / GenAI",
-    items: [
-      "RAG systems",
-      "GenAI apps",
-      "Groq",
-      "OpenAI GPT-4o",
-      "Vector search",
-    ],
-  },
-  {
-    title: "Data Science",
-    items: ["NumPy", "Pandas", "Matplotlib", "Seaborn", "Tableau"],
-  },
-  {
-    title: "Tools & Infra",
-    items: [
-      "GitHub Actions",
-      "CI/CD",
-      "Cloudflare",
-      "Vercel",
-      "Git",
-      "Figma",
-      "Canva",
-    ],
-  },
-  {
-    title: "Product & People",
-    items: [
-      "Product management",
-      "Problem-solving",
-      "Decision-making",
-      "Public speaking",
-      "Strategy",
-    ],
-  },
-];
-
-const EXPERIENCE = [
-  {
-    role: "Software Developer",
-    org: "Launched Global · Remote",
-    date: "May – Jun 2025",
-    points: [
-      "Built a reusable restaurant-menu frontend template restaurants can customize and deploy without touching core code.",
-      "Focused on a clean, responsive, user-friendly interface with a modular structure built for scalability and reuse.",
-    ],
-    tech: "HTML · CSS · JavaScript",
-  },
-  {
-    role: "Growth & Development Head",
-    org: "Apollo Medskills · Rishihood University",
-    date: "Apr 2025",
-    points: [
-      "Owned consumer-engagement and conversion strategy for Apollo Medskills × Zarmed University.",
-      "Drove marketing, audience targeting and strategic brand communication.",
-    ],
-    tech: "Strategy · Growth · Brand",
-  },
-];
-
-const RECOGNITION = [
-  "Growth & Development Head — Arthakram Consulting Club",
-  "LSSC Declamation Champion",
-  "Interschool JAM Winner",
-  "MUN Debate Champion",
-  "Multiple hackathons & E-summits — lead, technical & brainstorming roles",
-];
-
-const WORK = [
-  {
-    name: "biol.club",
-    href: "https://www.biol.club",
-    note: "Cloudflare-secured campus platform. My finest build — every feature ideated and cross-questioned against its failure cases.",
-    tech: "Next.js · Cloudflare · Supabase · Edge",
-  },
-  {
-    name: "ichor",
-    href: "https://ichor-xi.vercel.app",
-    note: "Run-to-conquer territory game. Claim ground on every run, defend it, climb the leaderboards. In progress.",
-    tech: "Geo-territory · Realtime · Clans",
-  },
-  {
-    name: "InsightRAG",
-    href: "https://rag-lac-ten.vercel.app",
-    note: "Multi-tenant RAG: document upload, vector search, context-aware answers mapped back to source.",
-    tech: "Next.js · Groq · BullMQ · MongoDB · Zustand",
-  },
-  {
-    name: "HomeQuest",
-    href: "https://homequest1.vercel.app",
-    note: "Full-stack AI real-estate marketplace — listings, live chat, AI-assisted property queries.",
-    tech: "React · Node · MySQL · Prisma · Socket.io · GPT-4o",
-  },
-  {
-    name: "Zombie Survival Shooter",
-    href: "https://zombie-survival-shooter.vercel.app",
-    note: "Wave-based browser game on a custom engine built with OOP & SOLID principles.",
-    tech: "Next.js · React · TypeScript · HTML5 Canvas",
-  },
-];
-
-const CONTACT = [
-  { label: "Email", value: "pushkarjain2024@nst.rishihood.edu.in", href: "mailto:pushkarjain2024@nst.rishihood.edu.in" },
-  { label: "Phone", value: "+91 79868 05107", href: "tel:+917986805107" },
-  { label: "GitHub", value: "github.com/pushkar-bit", href: "https://github.com/pushkar-bit" },
-  { label: "LinkedIn", value: "linkedin.com/in/pushkarjainn", href: "https://www.linkedin.com/in/pushkarjainn" },
-  { label: "Based in", value: "Delhi, India", href: undefined },
-];
-
-function AboutSection({ isMobile }: { isMobile: boolean }) {
-  const secRef = useRef<HTMLElement>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    const el = secRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => entries[0]?.isIntersecting && setInView(true),
-      { threshold: 0.12 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  const pad = isMobile ? "20px" : "clamp(40px, 8vw, 120px)";
-  const label: CSSProperties = {
-    fontSize: 11,
-    fontWeight: 600,
-    letterSpacing: "0.14em",
-    textTransform: "uppercase",
-    color: "#8a8a8a",
-    marginBottom: 18,
-  };
-  const hr: CSSProperties = {
-    border: "none",
-    borderTop: "1px solid rgba(0,0,0,0.1)",
-    margin: isMobile ? "48px 0" : "72px 0",
-  };
-
-  return (
-    <section
-      id="about"
-      ref={secRef}
-      style={{
-        position: "relative",
-        zIndex: 30,
-        background: "#fff",
-        color: "#0a0a0a",
-        padding: `${isMobile ? "72px" : "120px"} ${pad} ${
-          isMobile ? "72px" : "110px"
-        }`,
-      }}
-    >
-      <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-        {/* INTRO */}
-        <div style={label}>About — Pushkar Jain</div>
-        <h2
-          style={{
-            fontSize: isMobile ? 34 : "clamp(44px, 6vw, 82px)",
-            fontWeight: 600,
-            letterSpacing: "-0.04em",
-            lineHeight: 1.02,
-            maxWidth: 900,
-            marginBottom: 28,
-          }}
-        >
-          Full-Stack & AI developer. The stack is broad — the commitment is
-          unlimited.
-        </h2>
-        <p
-          style={{
-            fontSize: isMobile ? 16 : 19,
-            lineHeight: 1.6,
-            color: "#3a3a3a",
-            maxWidth: 720,
-          }}
-        >
-          I build scalable, user-centric products end to end — from a hardened,
-          well-reasoned backend to interfaces that feel effortless — and I lean
-          on AI and automation to make them smarter. I care about product, not
-          just code: every feature gets ideated, cross-questioned against its
-          failure cases, and shipped to stay up. Sarthak, this is what I'd bring
-          to the coffee business — and I'm up for every sleepless night it takes.
-        </p>
-
-        <hr style={hr} />
-
-        {/* QUALITIES */}
-        <div style={label}>What I bring — beyond the code</div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile
-              ? "1fr"
-              : "repeat(auto-fit, minmax(300px, 1fr))",
-            gap: isMobile ? 26 : "40px 56px",
-          }}
-        >
-          {QUALITIES.map((q, i) => (
-            <div key={q.title} style={{ display: "flex", gap: 16 }}>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#c0c0c0",
-                  lineHeight: 1.4,
-                  minWidth: 22,
-                }}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <div>
-                <div
-                  style={{
-                    fontSize: isMobile ? 17 : 19,
-                    fontWeight: 600,
-                    letterSpacing: "-0.02em",
-                    marginBottom: 6,
-                  }}
-                >
-                  {q.title}
-                </div>
-                <div
-                  style={{ fontSize: 14.5, lineHeight: 1.55, color: "#4a4a4a" }}
-                >
-                  {q.desc}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <hr style={hr} />
-
-        {/* FOCUS BARS */}
-        <div style={label}>Focus stack</div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-            gap: isMobile ? "22px 0" : "26px 60px",
-            maxWidth: 900,
-          }}
-        >
-          {FOCUS.map((f) => (
-            <div key={f.label}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                  marginBottom: 9,
-                }}
-              >
-                <span style={{ fontSize: 14, fontWeight: 500 }}>{f.label}</span>
-                <span style={{ fontSize: 12, color: "#9a9a9a" }}>{f.pct}%</span>
-              </div>
-              <div
-                style={{
-                  height: 4,
-                  background: "rgba(0,0,0,0.08)",
-                  borderRadius: 100,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    height: "100%",
-                    width: inView ? `${f.pct}%` : "0%",
-                    background: "#0a0a0a",
-                    borderRadius: 100,
-                    transition: "width 1.1s cubic-bezier(0.22,1,0.36,1)",
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <hr style={hr} />
-
-        {/* SKILLS GRID */}
-        <div style={label}>Everything in the toolbox</div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile
-              ? "1fr"
-              : "repeat(auto-fit, minmax(230px, 1fr))",
-            gap: isMobile ? 28 : 36,
-          }}
-        >
-          {SKILL_GROUPS.map((g) => (
-            <div key={g.title}>
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  marginBottom: 14,
-                  color: "#0a0a0a",
-                }}
-              >
-                {g.title}
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {g.items.map((it) => (
-                  <span
-                    key={it}
-                    style={{
-                      fontSize: 13,
-                      color: "#333",
-                      background: "rgba(0,0,0,0.05)",
-                      border: "1px solid rgba(0,0,0,0.08)",
-                      borderRadius: 100,
-                      padding: "6px 12px",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {it}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <hr style={hr} />
-
-        {/* EXPERIENCE */}
-        <div style={label}>Experience</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
-          {EXPERIENCE.map((e) => (
-            <div
-              key={e.role}
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "200px 1fr",
-                gap: isMobile ? 10 : 40,
-              }}
-            >
-              <div style={{ fontSize: 13, color: "#9a9a9a", paddingTop: 4 }}>
-                {e.date}
-              </div>
-              <div>
-                <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 600 }}>
-                  {e.role}
-                </div>
-                <div
-                  style={{ fontSize: 14, color: "#6a6a6a", margin: "3px 0 14px" }}
-                >
-                  {e.org}
-                </div>
-                <ul
-                  style={{
-                    listStyle: "none",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
-                  }}
-                >
-                  {e.points.map((p, i) => (
-                    <li
-                      key={i}
-                      style={{
-                        fontSize: 15,
-                        lineHeight: 1.55,
-                        color: "#3a3a3a",
-                        paddingLeft: 18,
-                        position: "relative",
-                      }}
-                    >
-                      <span style={{ position: "absolute", left: 0 }}>—</span>
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-                <div
-                  style={{
-                    fontSize: 12,
-                    letterSpacing: "0.04em",
-                    color: "#9a9a9a",
-                    marginTop: 12,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {e.tech}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <hr style={hr} />
-
-        {/* LEADERSHIP + EDUCATION */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-            gap: isMobile ? 48 : 60,
-          }}
-        >
-          <div>
-            <div style={label}>Leadership & recognition</div>
-            <ul
-              style={{
-                listStyle: "none",
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
-              }}
-            >
-              {RECOGNITION.map((r) => (
-                <li
-                  key={r}
-                  style={{
-                    fontSize: 15,
-                    lineHeight: 1.5,
-                    color: "#2a2a2a",
-                    paddingLeft: 18,
-                    position: "relative",
-                  }}
-                >
-                  <span style={{ position: "absolute", left: 0 }}>◆</span>
-                  {r}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <div style={label}>Education</div>
-            <div style={{ fontSize: isMobile ? 20 : 24, fontWeight: 600 }}>
-              B.Tech, Computer Science
-            </div>
-            <div style={{ fontSize: 15, color: "#6a6a6a", margin: "4px 0 10px" }}>
-              Newton School of Technology
-            </div>
-            <div style={{ fontSize: 14, color: "#3a3a3a" }}>
-              GPA 7.0 / 10 · Expected 2028
-            </div>
-          </div>
-        </div>
-
-        <hr style={hr} />
-
-        {/* SELECTED WORK */}
-        <div style={label}>Selected work</div>
-        <div style={{ borderTop: "1px solid rgba(0,0,0,0.1)" }}>
-          {WORK.map((w) => (
-            <a
-              key={w.name}
-              href={w.href}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "220px 1fr auto",
-                gap: isMobile ? 6 : 30,
-                alignItems: "start",
-                padding: isMobile ? "22px 0" : "26px 0",
-                borderBottom: "1px solid rgba(0,0,0,0.1)",
-                textDecoration: "none",
-                color: "#0a0a0a",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: isMobile ? 22 : 26,
-                  fontWeight: 600,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                {w.name}
-              </div>
-              <div
-                style={{ fontSize: 14, lineHeight: 1.5, color: "#4a4a4a" }}
-              >
-                {w.note}
-                <div
-                  style={{
-                    fontSize: 11,
-                    letterSpacing: "0.04em",
-                    color: "#9a9a9a",
-                    marginTop: 8,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {w.tech}
-                </div>
-              </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  color: "#9a9a9a",
-                  whiteSpace: "nowrap",
-                  paddingTop: 4,
-                }}
-              >
-                Visit ↗
-              </div>
-            </a>
-          ))}
-        </div>
-
-        <hr style={hr} />
-
-        {/* CONTACT */}
-        <div style={label}>Get in touch</div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile
-              ? "1fr"
-              : "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: isMobile ? 20 : 28,
-          }}
-        >
-          {CONTACT.map((c) => (
-            <div key={c.label}>
-              <div style={{ fontSize: 12, color: "#9a9a9a", marginBottom: 6 }}>
-                {c.label}
-              </div>
-              {c.href ? (
-                <a
-                  href={c.href}
-                  target={c.href.startsWith("http") ? "_blank" : undefined}
-                  rel="noreferrer"
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 500,
-                    color: "#0a0a0a",
-                    textDecoration: "none",
-                    borderBottom: "1px solid rgba(0,0,0,0.25)",
-                    paddingBottom: 2,
-                  }}
-                >
-                  {c.value}
-                </a>
-              ) : (
-                <span style={{ fontSize: 15, fontWeight: 500 }}>{c.value}</span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div
-          style={{
-            marginTop: isMobile ? 60 : 100,
-            paddingTop: 28,
-            borderTop: "1px solid rgba(0,0,0,0.1)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 14,
-          }}
-        >
-          <span style={{ fontSize: 13, color: "#9a9a9a" }}>
-            Pushkar Jain · Built for Sarthak · 2026
-          </span>
-          <span
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            style={{
-              fontSize: 13,
-              fontWeight: 500,
-              cursor: "pointer",
-              borderBottom: "1px solid rgba(0,0,0,0.25)",
-              paddingBottom: 2,
-            }}
-          >
-            Back to top ↑
-          </span>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function TileCaption({ tag, caption }: { tag: string; caption: string }) {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        padding: "clamp(14px,1.6vw,22px)",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 10,
-          fontWeight: 600,
-          letterSpacing: "0.08em",
-          color: "rgba(255,255,255,0.75)",
-          textTransform: "uppercase",
-          marginBottom: 6,
-        }}
-      >
-        {tag}
-      </div>
-      <div
-        style={{
-          fontSize: "clamp(12px,1vw,14px)",
-          fontWeight: 500,
-          lineHeight: 1.35,
-          letterSpacing: "-0.02em",
-          color: "#fff",
-        }}
-      >
-        {caption}
       </div>
     </div>
   );
