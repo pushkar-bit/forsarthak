@@ -423,6 +423,51 @@ export default function App() {
     }
   };
 
+  /* Drivethru: smooth cinematic automated scroll from top to bottom */
+  const driveThru = () => {
+    const startY = window.scrollY;
+    const targetY = document.documentElement.scrollHeight - window.innerHeight;
+    const distance = targetY - startY;
+    if (distance <= 0) return;
+
+    // Cinematic comfortable pace: not too quick, not too slow (~5.2s)
+    const duration = 5200;
+    let startTime: number | null = null;
+    let cancelled = false;
+
+    const easeInOutCubic = (t: number) =>
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    const cancel = () => {
+      cancelled = true;
+      window.removeEventListener("wheel", cancel);
+      window.removeEventListener("touchstart", cancel);
+      window.removeEventListener("keydown", cancel);
+    };
+
+    window.addEventListener("wheel", cancel, { passive: true });
+    window.addEventListener("touchstart", cancel, { passive: true });
+    window.addEventListener("keydown", cancel, { passive: true });
+
+    const step = (currentTime: number) => {
+      if (cancelled) return;
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = easeInOutCubic(progress);
+
+      window.scrollTo(0, startY + distance * ease);
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        cancel();
+      }
+    };
+
+    requestAnimationFrame(step);
+  };
+
   /* Resize listener */
   useEffect(() => {
     const onResize = () => {
@@ -890,6 +935,39 @@ export default function App() {
               </div>
             )}
 
+            <button
+              onClick={driveThru}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                background: "rgba(56, 189, 248, 0.15)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(56, 189, 248, 0.4)",
+                padding: isMobile ? "6px 12px" : "8px 16px",
+                borderRadius: 9999,
+                color: "#FFFFFF",
+                fontFamily: "'Inter Tight', sans-serif",
+                fontWeight: 600,
+                fontSize: isMobile ? 11 : 12,
+                letterSpacing: "0.04em",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  backgroundColor: "#38bdf8",
+                  boxShadow: "0 0 8px #38bdf8",
+                }}
+              />
+              <span>DRIVETHRU ↓</span>
+            </button>
+
             <a
               href="mailto:pushkar.jain2024@nst.rishihood.edu.in"
               style={{
@@ -1345,6 +1423,64 @@ export default function App() {
             </div>
           </div>
         </div>
+
+        {/* 1L. Hero Floating Drivethru Scroll Down Button */}
+        <motion.button
+          onClick={driveThru}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE, delay: 0.5 }}
+          style={{
+            position: "fixed",
+            left: "50%",
+            bottom: isMobile ? 24 : 36,
+            transform: "translateX(-50%)",
+            zIndex: 35,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: isMobile ? "10px 20px" : "12px 28px",
+            borderRadius: 9999,
+            background: "rgba(12, 12, 12, 0.82)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border: "1px solid rgba(255, 255, 255, 0.25)",
+            boxShadow: "0 10px 32px rgba(0, 0, 0, 0.5)",
+            color: "#FFFFFF",
+            fontFamily: "'Inter Tight', sans-serif",
+            fontSize: isMobile ? 12 : 13,
+            fontWeight: 600,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            transition: "all 0.2s ease",
+          }}
+        >
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              backgroundColor: "#38bdf8",
+              boxShadow: "0 0 10px #38bdf8",
+              display: "inline-block",
+            }}
+          />
+          <span>drivethru</span>
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <polyline points="19 12 12 19 5 12" />
+          </svg>
+        </motion.button>
       </div>
 
       {/* ------------------------------------------------------------ */}
